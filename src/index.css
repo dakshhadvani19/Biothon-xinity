@@ -1,0 +1,6 @@
+@import "tailwindcss";
+
+/* 
+ Tailwind v4 uses this pure import, zero custom CSS blocks needed as per requirements.
+ Utility classes will be used strictly.
+*/

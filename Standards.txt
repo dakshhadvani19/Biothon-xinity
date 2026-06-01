@@ -1,0 +1,6 @@
+1 -> Always don't first deep dive into code first plan and understand the requiremtns , 
+side effect , PROS , CONS and some future risks then plan and after analyse if the 
+current planned approach is best or not if it is then go ahead with it otherwise find 
+the one which can satify all condition that i said .
+
+
