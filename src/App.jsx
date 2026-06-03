@@ -5,6 +5,7 @@ import { Leaf } from 'lucide-react';
 import Dashboard from './views/Dashboard';
 import Diagnostic from './views/Diagnostic';
 import CommunityFeed from './views/CommunityFeed';
+import WeatherBanner from './components/WeatherBanner';
 
 const NavLinks = () => {
   const location = useLocation();
@@ -73,6 +74,7 @@ const App = () => {
         </header>
 
         <main className="container mx-auto p-4 md:p-6 flex-1 flex flex-col">
+          <WeatherBanner />
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/diagnostic" element={<Diagnostic />} />
