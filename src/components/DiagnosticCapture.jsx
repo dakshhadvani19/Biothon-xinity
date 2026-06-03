@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, AlertCircle, RefreshCw, CheckCircle2, Scan, UploadCloud, Leaf, ChevronRight } from 'lucide-react';
+import remediesData from '../data/remedies.json';
 
 const DiagnosticCapture = () => {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -43,21 +44,36 @@ const DiagnosticCapture = () => {
     setPreviewUrl(objectUrl);
   };
 
-  const handleSimulateUpload = () => {
+  const handleUploadSubmit = async () => {
     if (!selectedFile) return;
     setIsLoading(true);
     setErrorState(null);
 
-    // Mock processing payload latency (2000ms)
-    setTimeout(() => {
-      setIsLoading(false);
-      setResultData({
-        status: "success",
-        diagnosis: "Healthy Canopy",
-        confidence: "98.7%",
-        recommendation: "Maintain current moisture levels. No pathogen detected."
+    const formData = new FormData();
+    formData.append("file", selectedFile);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/v1/predict", {
+        method: "POST",
+        body: formData,
       });
-    }, 2000);
+
+      if (!response.ok) {
+        throw new Error(`Server returned error status code: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setResultData(data);
+    } catch (err) {
+      console.error("Inference Connection Error:", err);
+      setErrorState({
+        what: "Backend Connection Failed",
+        why: "Failed to reach AgriShield core engine. Ensure Uvicorn is active.",
+        next: "Action: Tap here to retry the analysis."
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleReset = () => {
@@ -67,6 +83,18 @@ const DiagnosticCapture = () => {
     setErrorState(null);
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
+
+  const getRemedialDetails = (diseaseKey) => {
+    return remediesData[diseaseKey] || {
+      title: `Unmapped Key: [${diseaseKey}]`,
+      severity: "Unknown",
+      organic: "No verified organic treatment profile matches this machine identification key.",
+      chemical: "Consult a local agricultural extension officer for broad-spectrum remediation alternatives.",
+      prevention: "Isolate the infected plant zone to prevent cross-contamination vector paths."
+    };
+  };
+
+  const treatment = resultData ? getRemedialDetails(resultData.disease) : null;
 
   return (
     <div className="max-w-xl mx-auto w-full">
@@ -180,7 +208,7 @@ const DiagnosticCapture = () => {
               </button>
               
               <button
-                onClick={handleSimulateUpload}
+                onClick={handleUploadSubmit}
                 disabled={isLoading}
                 className="py-4 px-4 bg-green-600 text-white font-bold rounded-xl active:scale-95 transition-all disabled:opacity-90 disabled:pointer-events-none relative overflow-hidden flex items-center justify-center gap-2"
               >
@@ -204,7 +232,7 @@ const DiagnosticCapture = () => {
         )}
 
         {/* Results Mode */}
-        {resultData && !errorState && (
+        {resultData && treatment && !errorState && (
           <motion.div
             key="results"
             initial={{ opacity: 0, y: 20 }}
@@ -221,30 +249,40 @@ const DiagnosticCapture = () => {
                </div>
             </div>
 
-            <div className="bg-white border border-gray-200 rounded-3xl p-6 shadow-sm space-y-5">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
-                    {resultData.diagnosis}
-                  </h2>
-                  <p className="text-gray-500 text-sm mt-1">Diagnostic Confidence: <span className="font-semibold text-green-600">{resultData.confidence}</span></p>
-                </div>
-                <div className="bg-green-100 p-2.5 rounded-full text-green-600">
-                  <Leaf className="w-6 h-6" />
-                </div>
+            <div className="bg-[#f1f8e9] border border-[#c5e1a5] rounded-xl p-6 shadow-sm space-y-4">
+              <div className="flex items-center justify-between border-b-2 border-[#a4c639] pb-3 mb-2">
+                <h3 className="m-0 text-[#33691e] text-xl font-bold">{treatment.title}</h3>
+                <span className={`px-2 py-1 rounded text-white font-bold text-xs ${treatment.severity === 'High' ? 'bg-[#ef5350]' : treatment.severity === 'Moderate' ? 'bg-[#ffb74d]' : 'bg-[#81c784]'}`}>
+                  Severity: {treatment.severity}
+                </span>
               </div>
-              
-              <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-                <h4 className="text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Recommendation</h4>
-                <p className="text-gray-800 text-sm leading-relaxed">{resultData.recommendation}</p>
+
+              <p className="m-0 text-sm text-[#666]">
+                Identification Confidence: <strong className="text-gray-900">{(resultData.confidence * 100).toFixed(2)}%</strong>
+                {resultData.mocked && <span className="text-[#e65100] ml-2 font-medium">[MOCK MODE ACTIVE]</span>}
+              </p>
+
+              <div>
+                <strong className="text-[#1b5e20] block mb-1 text-sm">Organic Remediation:</strong>
+                <span className="text-[15px] text-[#333] leading-relaxed">{treatment.organic}</span>
+              </div>
+
+              <div>
+                <strong className="text-[#b71c1c] block mb-1 text-sm">Chemical Control Alternative:</strong>
+                <span className="text-[15px] text-[#333] leading-relaxed">{treatment.chemical}</span>
+              </div>
+
+              <div>
+                <strong className="text-[#455a64] block mb-1 text-sm">Preventative Guidelines:</strong>
+                <span className="text-[15px] text-[#333] leading-relaxed">{treatment.prevention}</span>
               </div>
 
               <button
                 onClick={handleReset}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white font-medium py-3.5 px-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 group"
+                className="w-full bg-[#2e7d32] hover:bg-green-800 text-white font-medium py-3 px-4 rounded-xl transition-all active:scale-95 flex items-center justify-center gap-2 mt-4"
               >
                 Scan Another Area
-                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           </motion.div>
@@ -255,3 +293,4 @@ const DiagnosticCapture = () => {
 };
 
 export default DiagnosticCapture;
+

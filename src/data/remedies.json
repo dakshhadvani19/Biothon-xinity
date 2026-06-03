@@ -1,0 +1,37 @@
+{
+  "Tomato___Early_blight": {
+    "title": "Early Blight (Alternaria solani)",
+    "severity": "Moderate",
+    "organic": "Prune lower leaves to maximize airflow. Apply copper-based organic fungicides or Bacillus subtilis treatments.",
+    "chemical": "Apply chlorothalonil, mancozeb, or azoxystrobin fungicides at regular intervals according to package directions.",
+    "prevention": "Rotate crops annually. Avoid overhead watering to keep foliage dry."
+  },
+  "Cherry_(including_sour)___Powdery_mildew": {
+    "title": "Powdery Mildew (Podosphaera clandestina)",
+    "severity": "Moderate",
+    "organic": "Apply horticultural oils or potassium bicarbonate spray to the leaves when conditions are dry.",
+    "chemical": "Use sulfur-based fungicides or synthetic myclobutanil treatments during early vegetative stages.",
+    "prevention": "Prune tree canopies to improve sunlight penetration and air circulation."
+  },
+  "Apple___Apple_scab": {
+    "title": "Apple Scab (Venturia inaequalis)",
+    "severity": "High",
+    "organic": "Rake and destroy fallen leaves in autumn to disrupt the spore cycle. Apply sulfur compounds early in spring.",
+    "chemical": "Deploy captan or flutriafol protective fungicides sequentially during the green-tip phase.",
+    "prevention": "Plant scab-resistant apple cultivars if expanding the orchard layout."
+  },
+  "Tomato___Healthy": {
+    "title": "Healthy Tomato Foliage",
+    "severity": "None",
+    "organic": "No remedial action required. Maintain current organic composting inputs.",
+    "chemical": "No chemical applications required. Avoid preventative spraying to eliminate chemical runoff.",
+    "prevention": "Monitor crops bi-weekly for any signs of early stress patches."
+  },
+  "Corn_(maize)___Cercospora_leaf_spot Gray_leaf_spot": {
+  "title": "Corn Gray Leaf Spot (Cercospora zeae-maydis)",
+  "severity": "High",
+  "organic": "Apply organic neem oil formulations or copper-based fungicides early in the season. Till old crop residue deep into the soil to destroy overwintering spores.",
+  "chemical": "Deploy systemic group 3 or group 11 fungicides (such as pyraclostrobin or azoxystrobin) if lesions appear on the leaves below the ear before tasseling.",
+  "prevention": "Plant disease-resistant hybrid maize varieties and implement a minimum 2-year crop rotation away from corn to disrupt the pathogen lifecycle."
+  }
+}

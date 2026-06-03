@@ -3,4 +3,9 @@ side effect , PROS , CONS and some future risks then plan and after analyse if t
 current planned approach is best or not if it is then go ahead with it otherwise find 
 the one which can satify all condition that i said .
 
+2 -> Always use clean architecture and modular programming . keep the code organized 
 
+3 -> Always build UI with proper utilization of Framer motion , lucide react js , 
+tailwind css wherever fit those perfectly and try to build UI with good professional 
+animation , proper structure , consistent padding and spacing , optimize the use of 
+heavy css also , make it responsive for all devices also . 

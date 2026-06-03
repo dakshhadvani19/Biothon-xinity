@@ -16,22 +16,24 @@ const NavLinks = () => {
   ];
 
   return (
-    <nav className="flex items-center gap-1 bg-gray-100/50 p-1 rounded-full border border-gray-200/50">
+    <nav className="flex items-center gap-1 bg-gray-100/80 p-1.5 rounded-full border border-gray-200/80 shadow-inner">
       {links.map((link) => {
         const isActive = location.pathname === link.path;
         return (
           <Link
             key={link.name}
             to={link.path}
-            className={`relative px-5 py-2 rounded-full text-sm font-semibold transition-colors ${
-              isActive ? 'text-green-900' : 'text-gray-500 hover:text-green-700'
+            className={`relative px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 ${
+              isActive 
+                ? 'text-white' 
+                : 'text-gray-500 hover:text-green-700 hover:bg-green-50/80'
             }`}
           >
             {isActive && (
               <motion.div
                 layoutId="nav-indicator"
-                className="absolute inset-0 bg-white rounded-full shadow-sm border border-green-100 z-0"
-                transition={{ type: "spring", bounce: 0.15, duration: 0.5 }}
+                className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-[0_4px_12px_rgba(34,197,94,0.4)] z-0 border border-green-400"
+                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
               />
             )}
             <span className="relative z-10">{link.name}</span>
@@ -70,7 +72,7 @@ const App = () => {
           </div>
         </header>
 
-        <main className="container mx-auto p-4 md:p-6 flex-1">
+        <main className="container mx-auto p-4 md:p-6 flex-1 flex flex-col">
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/diagnostic" element={<Diagnostic />} />

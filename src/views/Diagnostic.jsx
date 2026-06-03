@@ -1,6 +1,7 @@
 import React from 'react';
 import { Camera } from 'lucide-react';
 import DiagnosticCapture from '../components/DiagnosticCapture';
+import ImageUploader from '../components/ImageUploader';
 
 const Diagnostic = () => {
   return (
@@ -13,8 +14,13 @@ const Diagnostic = () => {
         <p className="text-gray-600 mt-2 text-lg">Scan crops for instant pathogen detection and health analysis.</p>
       </header>
 
-      <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10">
+      <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-10 space-y-8">
         <DiagnosticCapture />
+        
+        {/* Minimal Insertion: Divider and Image File Processing Unit */}
+        <div className="border-t border-gray-100 pt-8">
+          <ImageUploader />
+        </div>
       </section>
     </div>
   );
