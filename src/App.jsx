@@ -7,6 +7,7 @@ import Diagnostic from './views/Diagnostic';
 import CommunityFeed from './views/CommunityFeed';
 import UpdatesDashboard from './views/UpdatesDashboard';
 import Profile from './views/Profile';
+import { AuthProvider } from './context/AuthContext';
 
 import useLiveWeather from './hooks/useLiveWeather';
 
@@ -89,13 +90,15 @@ const App = () => {
 
         <main className="container mx-auto p-4 md:p-6 flex-1 flex flex-col">
 
-          <Routes>
-            <Route path="/" element={<Dashboard />} />
-            <Route path="/diagnostic" element={<Diagnostic />} />
-            <Route path="/feed" element={<CommunityFeed />} />
-            <Route path="/updates" element={<UpdatesDashboard />} />
-            <Route path="/profile" element={<Profile />} />
-          </Routes>
+          <AuthProvider>
+            <Routes>
+              <Route path="/" element={<Dashboard />} />
+              <Route path="/diagnostic" element={<Diagnostic />} />
+              <Route path="/feed" element={<CommunityFeed />} />
+              <Route path="/updates" element={<UpdatesDashboard />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </AuthProvider>
         </main>
         
         <footer className="bg-white border-t border-gray-200/50 p-6 text-center text-sm font-medium text-gray-400 mt-auto">
