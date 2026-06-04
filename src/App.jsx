@@ -1,12 +1,13 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Leaf, AlertTriangle } from 'lucide-react';
+import { Leaf, AlertTriangle, User } from 'lucide-react';
 import Dashboard from './views/Dashboard';
 import Diagnostic from './views/Diagnostic';
 import CommunityFeed from './views/CommunityFeed';
 import UpdatesDashboard from './views/UpdatesDashboard';
-import WeatherBanner from './components/WeatherBanner';
+import Profile from './views/Profile';
+
 import useLiveWeather from './hooks/useLiveWeather';
 
 const NavLinks = () => {
@@ -79,20 +80,21 @@ const App = () => {
 
             {/* Right side placeholder (Avatar) to balance layout */}
             <div className="hidden md:flex w-[180px] justify-end">
-               <button className="w-9 h-9 rounded-full bg-green-50 hover:bg-green-100 border border-green-200 overflow-hidden flex items-center justify-center transition-colors hover:scale-105 active:scale-95">
-                 <span className="text-xs font-bold text-green-700">DH</span>
-               </button>
+               <Link to="/profile" className="hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors rounded-full p-2">
+                 <User className="w-5 h-5 text-gray-700 dark:text-gray-300" />
+               </Link>
             </div>
           </div>
         </header>
 
         <main className="container mx-auto p-4 md:p-6 flex-1 flex flex-col">
-          <WeatherBanner />
+
           <Routes>
             <Route path="/" element={<Dashboard />} />
             <Route path="/diagnostic" element={<Diagnostic />} />
             <Route path="/feed" element={<CommunityFeed />} />
             <Route path="/updates" element={<UpdatesDashboard />} />
+            <Route path="/profile" element={<Profile />} />
           </Routes>
         </main>
         

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, Lightbulb } from 'lucide-react';
 import useLiveWeather from '../hooks/useLiveWeather';
 import { fetchAIInsights } from '../services/weatherService';
+import WeatherBanner from '../components/WeatherBanner';
 
 export default function UpdatesDashboard() {
   const { data, loading, error, refreshWeather, lastUpdated } = useLiveWeather();
@@ -63,6 +64,7 @@ export default function UpdatesDashboard() {
 
   return (
     <div className="w-full max-w-6xl mx-auto space-y-6 pb-12 mt-4">
+      <WeatherBanner />
       {/* Header Section */}
       <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
         <div className="flex items-center gap-6">
