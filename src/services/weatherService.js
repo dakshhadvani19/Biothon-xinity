@@ -40,7 +40,7 @@ export const getFarmerCoordinates = () => {
 // 2. Enhanced Weather Fetching & Deep Parsing Logic
 export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
     try {
-        const url = `http://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&alerts=yes&days=2`;
+        const url = `https://api.weatherapi.com/v1/forecast.json?key=${WEATHER_API_KEY}&q=${lat},${lon}&alerts=yes&days=2`;
         const response = await fetch(url);
 
         if (!response.ok) {
