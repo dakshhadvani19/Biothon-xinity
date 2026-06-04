@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target } from 'lucide-react';
+import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, Lightbulb } from 'lucide-react';
 import useLiveWeather from '../hooks/useLiveWeather';
 import { fetchAIInsights } from '../services/weatherService';
 
@@ -9,13 +9,18 @@ export default function UpdatesDashboard() {
   const [isInsightsLoading, setIsInsightsLoading] = useState(true);
 
   useEffect(() => {
-    if (data) {
-      setIsInsightsLoading(true);
-      fetchAIInsights(data).then(result => {
-        setInsights(result);
-        setIsInsightsLoading(false);
-      });
-    }
+    const fetchInsights = async () => {
+      if (data) {
+        setIsInsightsLoading(true);
+        try {
+          const dynamicInsights = await fetchAIInsights(data);
+          setInsights(dynamicInsights);
+        } finally {
+          setIsInsightsLoading(false);
+        }
+      }
+    };
+    fetchInsights();
   }, [data]);
 
   const formatTime = (epoch) => {
@@ -153,25 +158,25 @@ export default function UpdatesDashboard() {
         </div>
       </div>
 
-      {/* Live Agronomic Advisory */}
-      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <Target className="w-5 h-5 text-green-600" />
-          Live Agronomic Advisory
+      {/* AI Agronomic Intelligence Advisory */}
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm mt-6">
+        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-yellow-500" />
+          AI Agronomic Intelligence Advisory
         </h2>
         
         {isInsightsLoading ? (
           <div className="space-y-4 animate-pulse">
-            <div className="h-16 bg-gray-200 rounded-lg w-full"></div>
-            <div className="h-16 bg-gray-200 rounded-lg w-full"></div>
-            <div className="h-16 bg-gray-200 rounded-lg w-full"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
+            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
           </div>
         ) : (
-          <div className="grid gap-4 md:grid-cols-1">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {insights.map((insight, idx) => (
-              <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700 flex items-start gap-4">
-                <Target className="w-6 h-6 text-green-600 shrink-0 mt-0.5" />
-                <p className="text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
+              <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700/50 flex items-start gap-3">
+                <span className="text-green-500 font-bold shrink-0">✓</span>
+                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
                   {insight}
                 </p>
               </div>
