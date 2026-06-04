@@ -3,9 +3,12 @@ import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, 
 import useLiveWeather from '../hooks/useLiveWeather';
 import { fetchAIInsights } from '../services/weatherService';
 import WeatherBanner from '../components/WeatherBanner';
+import { useAuth } from '../context/AuthContext';
+import { farmService } from '../services/farmService';
 
 export default function UpdatesDashboard() {
   const { data, loading, error, refreshWeather, lastUpdated } = useLiveWeather();
+  const { user } = useAuth();
   const [insights, setInsights] = useState([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(true);
 
@@ -14,7 +17,11 @@ export default function UpdatesDashboard() {
       if (data) {
         setIsInsightsLoading(true);
         try {
-          const dynamicInsights = await fetchAIInsights(data);
+          let activeFarms = [];
+          if (user) {
+              activeFarms = await farmService.getUserFarms(user.$id);
+          }
+          const dynamicInsights = await fetchAIInsights(data, activeFarms);
           setInsights(dynamicInsights);
         } finally {
           setIsInsightsLoading(false);
