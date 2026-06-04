@@ -1,0 +1,23 @@
+{
+  "builds": [
+    {
+      "src": "agrishield-client/package.json",
+      "use": "@vercel/static-build",
+      "config": { "distDir": "dist" }
+    },
+    {
+      "src": "agrishield-ml-engine/main.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "agrishield-ml-engine/main.py"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "agrishield-client/$1"
+    }
+  ]
+}
