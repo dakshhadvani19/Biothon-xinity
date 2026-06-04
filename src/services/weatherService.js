@@ -1,4 +1,4 @@
-export const WEATHER_API_KEY = '914f01da8d6f424981993346260306';
+export const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
 // 1. Geospatial Math (Haversine Formula)
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
