@@ -171,14 +171,14 @@ export const getSmartWeatherUpdates = async () => {
     }
 };
 
-export async function fetchAIInsights(weatherData) {
+export async function fetchAIInsights(weatherData, userFarms = []) {
     try {
         const response = await fetch('http://localhost:8000/api/v1/agronomic-insights', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
-            body: JSON.stringify({ data: weatherData })
+            body: JSON.stringify({ data: weatherData, farms: userFarms })
         });
         
         if (!response.ok) {
