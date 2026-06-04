@@ -1,9 +1,22 @@
-import React from 'react';
-import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target } from 'lucide-react';
 import useLiveWeather from '../hooks/useLiveWeather';
+import { fetchAIInsights } from '../services/weatherService';
 
 export default function UpdatesDashboard() {
   const { data, loading, error, refreshWeather, lastUpdated } = useLiveWeather();
+  const [insights, setInsights] = useState([]);
+  const [isInsightsLoading, setIsInsightsLoading] = useState(true);
+
+  useEffect(() => {
+    if (data) {
+      setIsInsightsLoading(true);
+      fetchAIInsights(data).then(result => {
+        setInsights(result);
+        setIsInsightsLoading(false);
+      });
+    }
+  }, [data]);
 
   const formatTime = (epoch) => {
     return new Date(epoch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
@@ -138,6 +151,33 @@ export default function UpdatesDashboard() {
             );
           })}
         </div>
+      </div>
+
+      {/* Live Agronomic Advisory */}
+      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
+        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
+          <Target className="w-5 h-5 text-green-600" />
+          Live Agronomic Advisory
+        </h2>
+        
+        {isInsightsLoading ? (
+          <div className="space-y-4 animate-pulse">
+            <div className="h-16 bg-gray-200 rounded-lg w-full"></div>
+            <div className="h-16 bg-gray-200 rounded-lg w-full"></div>
+            <div className="h-16 bg-gray-200 rounded-lg w-full"></div>
+          </div>
+        ) : (
+          <div className="grid gap-4 md:grid-cols-1">
+            {insights.map((insight, idx) => (
+              <div key={idx} className="bg-white dark:bg-gray-800 rounded-lg shadow-sm p-4 border border-gray-100 dark:border-gray-700 flex items-start gap-4">
+                <Target className="w-6 h-6 text-green-600 shrink-0 mt-0.5" />
+                <p className="text-gray-700 dark:text-gray-300 font-medium leading-relaxed">
+                  {insight}
+                </p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
