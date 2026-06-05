@@ -53,7 +53,11 @@ const DiagnosticCapture = () => {
     formData.append("file", selectedFile);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/v1/predict", {
+      const mlApiUrl = import.meta.env.DEV 
+        ? "http://127.0.0.1:8000/api/v1/predict" 
+        : "https://dakshhadvani19-agrishield.hf.space/api/v1/predict";
+
+      const response = await fetch(mlApiUrl, {
         method: "POST",
         body: formData,
       });
