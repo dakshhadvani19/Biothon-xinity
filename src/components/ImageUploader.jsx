@@ -110,7 +110,7 @@ export default function ImageUploader() {
           </div>
 
           <p style={{ margin: '5px 0 15px 0', fontSize: '14px', color: '#666' }}>
-            Identification Confidence: <strong>{(prediction.confidence * 100).toFixed(2)}%</strong> 
+            Identification Confidence: <strong>{Number(prediction.confidence).toFixed(2)}%</strong> 
             {prediction.mocked && <span style={{ color: '#e65100', marginLeft: '10px' }}>[MOCK MODE ACTIVE]</span>}
           </p>
 

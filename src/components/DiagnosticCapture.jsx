@@ -262,7 +262,7 @@ const DiagnosticCapture = () => {
               </div>
 
               <p className="m-0 text-sm text-[#666]">
-                Identification Confidence: <strong className="text-gray-900">{(resultData.confidence * 100).toFixed(2)}%</strong>
+                Identification Confidence: <strong className="text-gray-900">{Number(resultData.confidence).toFixed(2)}%</strong>
                 {resultData.mocked && <span className="text-[#e65100] ml-2 font-medium">[MOCK MODE ACTIVE]</span>}
               </p>
 
