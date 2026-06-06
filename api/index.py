@@ -26,9 +26,11 @@ if os.path.exists(env_path):
 from datetime import datetime
 from typing import List, Optional
 from fastapi import FastAPI, UploadFile, File, Response
+import httpx
 from pydantic import BaseModel
 from openai import AsyncOpenAI
 from fastapi.middleware.cors import CORSMiddleware
+from typing import List, Optional
 
 # ReportLab PDF imports
 from reportlab.lib.pagesizes import letter
@@ -65,6 +67,9 @@ class ChatMessage(BaseModel):
 class ChatPayload(BaseModel):
     messages: List[ChatMessage]
     context: Optional[dict] = None
+    farms: Optional[list] = []
+    weather: Optional[dict] = None
+    user_name: Optional[str] = None
 
 # Preference Schema for automated daily PDF reports
 class ReportSettingsPayload(BaseModel):
@@ -671,6 +676,240 @@ async def send_daily_reports():
     except Exception as e:
         return {"status": "error", "message": str(e)}
 
+class DiagnosisItem(BaseModel):
+    """
+    A single pre-diagnosed image entry sent from the React frontend.
+    The disease label comes from the diagnostic_logs DB — no re-inference needed.
+    """
+    file_id: str
+    image_url: Optional[str] = None
+    disease: str          # e.g. "Tomato___Early_blight"
+    confidence: float     # e.g. 0.94
+
+class NutritionRequest(BaseModel):
+    """
+    Flow A — By Image (text-only path):
+    React sends the already-diagnosed items from diagnostic_logs.
+    We skip image download / re-inference entirely and go straight to Groq.
+    This eliminates CORS, JWT, HuggingFace timeout, and Vercel size issues.
+    """
+    diagnoses: List[DiagnosisItem]
+
+class FarmItem(BaseModel):
+    farm_id: str
+    crop: str
+    soil: str
+
+class FarmNutritionRequest(BaseModel):
+    farms: List[FarmItem]
+
+HF_PREDICT_URL = "https://dakshhadvani19-agrishield.hf.space/api/v1/predict"
+
+@app.post("/api/v1/nutrition-guide")
+async def get_nutrition_guide(payload: NutritionRequest):
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return {"error": "GROQ_API_KEY not set", "results": []}
+
+    if not payload.diagnoses:
+        return {"error": "No diagnoses provided", "results": []}
+
+    # Build Groq prompt from already-diagnosed disease labels
+    diagnosis_text = "\n".join(
+        f"Image {i + 1} (index {i}): {d.disease.replace('___', ' — ').replace('_', ' ')} "
+        f"(confidence: {round(d.confidence * 100, 1)}%)"
+        for i, d in enumerate(payload.diagnoses)
+    )
+
+    groq_client = AsyncOpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+
+    system_prompt = """You are AgriNutrition AI, a world-class agronomic nutrition specialist.
+You receive crop disease diagnoses from a computer vision model.
+For EACH image, generate an INDIVIDUAL, HIGHLY SPECIFIC nutrition and treatment guide.
+Be precise, scientific, and practical. Tailor every recommendation to the exact disease.
+
+Return ONLY a valid JSON object:
+{
+  "results": [
+    {
+      "image_index": 0,
+      "crop_label": "Human-friendly label e.g. 'Tomato — Early Blight'",
+      "severity": "Low|Moderate|High",
+      "summary": "2-3 sentences: why this disease causes nutritional imbalance and what it depletes",
+      "npk": {
+        "nitrogen":   { "value": 80, "unit": "kg/ha", "tip": "One specific application sentence" },
+        "phosphorus": { "value": 40, "unit": "kg/ha", "tip": "One specific application sentence" },
+        "potassium":  { "value": 60, "unit": "kg/ha", "tip": "One specific application sentence" }
+      },
+      "organic_amendments": [
+        "Specific amendment 1 with dose and timing",
+        "Specific amendment 2 with dose and timing",
+        "Specific amendment 3 with dose and timing"
+      ],
+      "weekly_schedule": [
+        "Week 1: specific action",
+        "Week 2: specific action",
+        "Week 3: specific action",
+        "Week 4: specific action"
+      ]
+    }
+  ]
+}"""
+
+    user_prompt = (
+        f"The AgriShield vision model diagnosed the following:\n\n{diagnosis_text}\n\n"
+        "Generate an individual nutrition guide for EACH image.\n"
+        "The 'image_index' must match the index shown (0-based).\n"
+        "Be disease-specific — do NOT give generic advice."
+    )
+
+    try:
+        groq_response = await groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,   # Very low = maximum factual accuracy
+        )
+        raw = groq_response.choices[0].message.content or "{}"
+        parsed = json.loads(raw.replace("```json", "").replace("```", "").strip())
+
+        # Enrich Groq results with image URLs and confidence from input
+        groq_results = parsed.get("results", [])
+        for r in groq_results:
+            idx = r.get("image_index", -1)
+            if 0 <= idx < len(payload.diagnoses):
+                d = payload.diagnoses[idx]
+                r["image_url"]   = d.image_url
+                r["raw_disease"] = d.disease
+                r["confidence"]  = d.confidence * 100
+                r["mocked"]      = False
+
+        return {"results": groq_results}
+
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[NutritionGuide] 🛑 Groq failed: {error_msg}")
+        traceback.print_exc()
+        # Fallback: return stubs with the disease labels at least
+        return {
+            "error": f"Groq synthesis failed: {error_msg}",
+            "results": [
+                {
+                    "image_index":  i,
+                    "image_url":    d.image_url,
+                    "crop_label":   d.disease.replace("___", " — ").replace("_", " "),
+                    "raw_disease":  d.disease,
+                    "confidence":   d.confidence * 100,
+                    "severity":     "Unknown",
+                    "summary":      "AI synthesis temporarily unavailable.",
+                    "npk":          {},
+                    "organic_amendments": [],
+                    "weekly_schedule":    [],
+                }
+                for i, d in enumerate(payload.diagnoses)
+            ],
+        }
+
+@app.post("/api/v1/farm-nutrition-guide")
+async def get_farm_nutrition_guide(payload: FarmNutritionRequest):
+    api_key = os.environ.get("GROQ_API_KEY")
+    if not api_key:
+        return {"error": "GROQ_API_KEY not set", "results": []}
+
+    if not payload.farms:
+        return {"error": "No farms provided", "results": []}
+
+    farm_text = "\n".join(
+        f"Farm {i + 1} (index {i}): {f.crop} grown in {f.soil} soil"
+        for i, f in enumerate(payload.farms)
+    )
+
+    groq_client = AsyncOpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
+
+    system_prompt = """You are AgriNutrition AI, a world-class agronomic nutrition specialist.
+You receive a list of farms (crop and soil type) from a farmer.
+For EACH farm, generate an INDIVIDUAL, HIGHLY SPECIFIC soil nutrition and fertilizer guide.
+Be precise, scientific, and practical. Tailor every recommendation to the exact crop and soil type.
+
+Return ONLY a valid JSON object:
+{
+  "results": [
+    {
+      "image_index": 0,
+      "crop_label": "Human-friendly label e.g. 'Cotton in Black Soil'",
+      "severity": "Low",
+      "summary": "2-3 sentences: what this crop requires in this specific soil type",
+      "npk": {
+        "nitrogen":   { "value": 80, "unit": "kg/ha", "tip": "One specific application sentence" },
+        "phosphorus": { "value": 40, "unit": "kg/ha", "tip": "One specific application sentence" },
+        "potassium":  { "value": 60, "unit": "kg/ha", "tip": "One specific application sentence" }
+      },
+      "organic_amendments": [
+        "Specific amendment 1 with dose and timing",
+        "Specific amendment 2 with dose and timing",
+        "Specific amendment 3 with dose and timing"
+      ],
+      "weekly_schedule": []
+    }
+  ]
+}"""
+
+    user_prompt = (
+        f"The user has the following farms:\n\n{farm_text}\n\n"
+        "Generate an individual nutrition guide for EACH farm.\n"
+        "The 'image_index' must match the index shown (0-based).\n"
+        "Be crop and soil-specific — do NOT give generic advice."
+    )
+
+    try:
+        groq_response = await groq_client.chat.completions.create(
+            model="llama-3.1-8b-instant",
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user",   "content": user_prompt},
+            ],
+            response_format={"type": "json_object"},
+            temperature=0.2,
+        )
+        raw = groq_response.choices[0].message.content or "{}"
+        parsed = json.loads(raw.replace("```json", "").replace("```", "").strip())
+
+        groq_results = parsed.get("results", [])
+        for r in groq_results:
+            idx = r.get("image_index", -1)
+            if 0 <= idx < len(payload.farms):
+                f = payload.farms[idx]
+                r["image_url"]   = None
+                r["raw_disease"] = f"{f.crop} in {f.soil} Soil"
+                r["mocked"]      = False
+
+        return {"results": groq_results}
+
+    except Exception as e:
+        error_msg = str(e)
+        print(f"[FarmNutritionGuide] 🛑 Groq failed: {error_msg}")
+        traceback.print_exc()
+        return {
+            "error": f"Groq synthesis failed: {error_msg}",
+            "results": [
+                {
+                    "image_index":  i,
+                    "image_url":    None,
+                    "crop_label":   f"{f.crop} in {f.soil} Soil",
+                    "raw_disease":  f.crop,
+                    "severity":     "Unknown",
+                    "summary":      "AI synthesis temporarily unavailable.",
+                    "npk":          {},
+                    "organic_amendments": [],
+                    "weekly_schedule":    [],
+                }
+                for i, f in enumerate(payload.farms)
+            ],
+        }
+
 @app.post("/api/v1/agronomic-insights")
 async def get_agronomic_insights(payload: WeatherPayload):
     try:
@@ -681,7 +920,7 @@ async def get_agronomic_insights(payload: WeatherPayload):
         client = AsyncOpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
         
         response = await client.chat.completions.create(
-            model="llama3-8b-8192",
+            model="llama-3.1-8b-instant",
             messages=[
                 {
                     "role": "system", 
@@ -778,26 +1017,69 @@ async def chat_suggestions(payload: ChatPayload):
             
         client = AsyncOpenAI(api_key=api_key, base_url="https://api.groq.com/openai/v1")
         
-        messages = []
+        # --- Build rich context from farmer's data ---
+        farms_context = ""
+        if payload.farms:
+            farm_lines = [
+                f"  - Farm {i+1}: {f.get('crop', 'Unknown')} crop in {f.get('soil', 'Unknown')} soil"
+                for i, f in enumerate(payload.farms)
+            ]
+            farms_context = "FARMER'S REGISTERED FARMS:\n" + "\n".join(farm_lines)
+        else:
+            farms_context = "FARMER'S REGISTERED FARMS: None registered yet (give general farming advice)."
+
+        weather_context = ""
+        if payload.weather:
+            w = payload.weather
+            temp = w.get("currentTemp", "N/A")
+            condition = w.get("condition", "N/A")
+            humidity = w.get("humidity", "N/A")
+            wind = w.get("windSpeed", "N/A")
+            weather_context = (
+                f"CURRENT WEATHER TELEMETRY:\n"
+                f"  - Temperature: {temp}°C\n"
+                f"  - Condition: {condition}\n"
+                f"  - Humidity: {humidity}%\n"
+                f"  - Wind Speed: {wind} kph"
+            )
+        else:
+            weather_context = "CURRENT WEATHER TELEMETRY: Not available. Assume typical regional conditions."
+
+        farmer_name = payload.user_name or "Farmer"
+
+        # --- Precision system prompt ---
+        system_content = f"""You are AgriShield AI — a world-class agronomic expert built exclusively for farmers.
+Your job is to provide highly accurate, practical, and immediately actionable farming advice.
+
+{farms_context}
+
+{weather_context}
+
+FARMER NAME: {farmer_name}
+
+CORE RULES — FOLLOW STRICTLY:
+1. FARMING TOPICS ONLY: You answer ONLY questions related to agriculture, farming, crops, soil, irrigation, fertilizers, pesticides, pest control, companion planting, harvesting, weather-crop interactions, post-harvest storage, market-ready tips, and farm economics.
+2. USE REAL DATA FIRST: Always reference the farmer's specific crops, soil types, and current weather when giving advice. Be specific — name exact fertilizer doses (kg/ha), irrigation intervals, pesticide names.
+3. GENERAL FARMING FALLBACK: If the farmer asks a farming question you don't have direct data for, you STILL answer confidently using established agronomic knowledge. Aim for practical, research-backed advice. State if the advice is general vs farm-specific.
+4. OUT-OF-SCOPE HANDLING: If a question is completely unrelated to farming (e.g., cricket scores, politics, movies, coding), respond with ONLY this message — do NOT add anything else:
+   "🌾 I'm designed to assist exclusively with farming and agriculture. This question is outside my field of expertise. Please ask me anything about your crops, soil, irrigation, or farm management — I'm here to help your farm thrive!"
+5. ACCURACY OVER COMPLETENESS: If you are unsure about a highly specific regional or regulatory detail, say so clearly and provide the closest scientifically accurate answer you can. Never fabricate numbers or product names.
+6. FORMAT: Use bullet points for multi-step answers. Bold key terms. Keep answers concise but complete. Start directly — no "Great question!" filler.
+7. WEATHER-AWARE: Always factor the current weather telemetry into your recommendations where relevant (e.g., don't recommend irrigation if it's raining, warn about fungal risk in high humidity).
+"""
+
+        messages = [{"role": "system", "content": system_content}]
         
-        system_content = (
-            "You are the AgriShield Agronomic Expert Chat Advisor. Your goal is to help farmers "
-            "with crop recommendations, soil preparation, pest warnings, irrigation practices, "
-            "and suggestions. Provide clear, technical, yet easily understandable answers. "
-            "Use bullet points for lists and formatting for readability. Keep recommendations actionable."
-        )
-        
-        if payload.context:
-            system_content += f"\nActive Conversation Context:\n{json.dumps(payload.context)}"
-            
-        messages.append({"role": "system", "content": system_content})
-        
-        for msg in payload.messages:
+        # Filter out the initial welcome message (assistant role at index 0) to save tokens
+        user_messages = [m for m in payload.messages if not (m.role == "assistant" and "Welcome to AgriShield" in m.content)]
+        for msg in user_messages:
             messages.append({"role": msg.role, "content": msg.content})
             
         response = await client.chat.completions.create(
-            model="llama3-8b-8192",
-            messages=messages
+            model="llama-3.1-8b-instant",
+            messages=messages,
+            temperature=0.3,       # Low temperature = factual, consistent answers
+            max_tokens=800,        # Enough for a thorough answer, not wasteful
         )
         
         assistant_reply = response.choices[0].message.content
@@ -805,7 +1087,7 @@ async def chat_suggestions(payload: ChatPayload):
     except Exception as e:
         print(f"[ERROR] CRITICAL CHAT LLM EXCEPTION: {e}")
         traceback.print_exc()
-        return {"content": "I apologize, my systems are currently updating. Please adhere to your local agronomic guidelines, or try asking again shortly."}
+        return {"content": "🌾 I'm temporarily unavailable. Please try again in a moment — your farm can't wait!"}
 
 @app.post("/api/v1/analyze-nutrition")
 async def analyze_nutrition(payload: NutritionPayload):
@@ -903,4 +1185,3 @@ async def mock_predict(file: UploadFile = File(...)):
         "confidence": 0.99,
         "mocked": True
     }
-

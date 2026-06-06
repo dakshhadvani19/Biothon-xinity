@@ -19,6 +19,8 @@ export const APPWRITE_CONFIG = {
     logsCollectionId: import.meta.env.VITE_APPWRITE_LOGS_COLLECTION_ID,
     feedCollectionId: import.meta.env.VITE_APPWRITE_FEED_COLLECTION_ID,
     imagesBucketId: import.meta.env.VITE_APPWRITE_IMAGES_BUCKET_ID,
+    userImagesCollectionId: import.meta.env.VITE_APPWRITE_USER_IMAGES_COLLECTION_ID,
+    userAuthCollectionId: import.meta.env.VITE_APPWRITE_USER_AUTH_COLLECTION_ID,
 };
 
 export default client;

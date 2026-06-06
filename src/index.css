@@ -1,6 +1,19 @@
 @import "tailwindcss";
 
-/* 
- Tailwind v4 uses this pure import, zero custom CSS blocks needed as per requirements.
- Utility classes will be used strictly.
-*/
+@layer utilities {
+  .google-border-hover {
+    border-color: transparent;
+    transition: all 0.3s ease;
+  }
+  .google-border-hover:hover {
+    animation: google-border-flow 3s linear infinite;
+  }
+}
+
+@keyframes google-border-flow {
+  0% { border-color: #4285F4; }
+  25% { border-color: #EA4335; }
+  50% { border-color: #FBBC05; }
+  75% { border-color: #34A853; }
+  100% { border-color: #4285F4; }
+}

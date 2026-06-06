@@ -2,8 +2,8 @@ import { databases } from '../appwrite/config';
 import { ID, Query } from 'appwrite';
 
 // Utilizing environment variables for robust configuration, falling back to placeholders
-const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || 'YOUR_DATABASE_ID';
-const COL_ID = import.meta.env.VITE_APPWRITE_FARMS_COLLECTION_ID || 'YOUR_COLLECTION_ID';
+const DB_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID || '6a1d47b3002eaafca63b';
+const COL_ID = import.meta.env.VITE_APPWRITE_FARMS_COLLECTION_ID || 'farms';
 
 export const farmService = {
     addFarmToDB: async (userId, crop, soil) => {

@@ -1,5 +1,5 @@
-import { account } from '../appwrite/config';
-import { OAuthProvider } from 'appwrite';
+import { account, databases, APPWRITE_CONFIG } from '../api/appwrite';
+import { OAuthProvider, Query, ID } from 'appwrite';
 
 export const authService = {
     loginWithGoogle: () => {
@@ -8,11 +8,11 @@ export const authService = {
             authService.loginMock();
             return;
         }
-        // Redirects to Google, then returns to /profile on success
+        // Redirects to Google, then returns to / on success
         account.createOAuth2Session(
             OAuthProvider.Google,
-            'http://localhost:5173/profile',
-            'http://localhost:5173/'
+            window.location.origin + '/',
+            window.location.origin + '/'
         );
     },
     loginMock: () => {
@@ -24,6 +24,35 @@ export const authService = {
         localStorage.setItem('agrishield_mock_user', JSON.stringify(mockUser));
         window.location.reload();
     },
+
+    syncUserToDatabase: async (user) => {
+        // Guard: skip entirely if collection is not configured
+        if (!APPWRITE_CONFIG.userAuthCollectionId) return;
+        try {
+            try {
+                await databases.getDocument(
+                    APPWRITE_CONFIG.databaseId,
+                    APPWRITE_CONFIG.userAuthCollectionId,
+                    user.$id
+                );
+                // Document exists, nothing to do
+            } catch (err) {
+                if (err?.code === 404) {
+                    // Document doesn't exist — create it
+                    await databases.createDocument(
+                        APPWRITE_CONFIG.databaseId,
+                        APPWRITE_CONFIG.userAuthCollectionId,
+                        user.$id,
+                        { email_id: user.email }  // attribute is "email_id" in Appwrite schema
+                    );
+                }
+                // Any other error (collection not found etc.) is swallowed below
+            }
+        } catch (error) {
+            // Non-critical — don't block authentication
+            console.warn("[AuthService] ⚠️ user_auth sync skipped:", error?.message);
+        }
+    },
     getCurrentUser: async () => {
         const mockUser = localStorage.getItem('agrishield_mock_user');
         if (mockUser) {
@@ -33,11 +62,17 @@ export const authService = {
             return null; // Avoid making a broken network request to cloud.appwrite.io
         }
         try {
-            return await account.get();
+            const user = await account.get();
+            if (user) {
+                // Ensure their details are synced to the new user_auth table
+                await authService.syncUserToDatabase(user);
+            }
+            return user;
         } catch (error) {
             return null; // Silent catch for unauthenticated users
         }
     },
+    
     logout: async () => {
         localStorage.removeItem('agrishield_mock_user');
         try {

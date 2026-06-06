@@ -22,7 +22,7 @@ export const aiService = {
         }
     },
 
-    sendChatMessage: async (messages, context = null) => {
+    sendChatMessage: async (messages, context = null, farms = [], weather = null, userName = null) => {
         try {
             const response = await fetch(`${BASE_URL}/api/v1/chat`, {
                 method: 'POST',
@@ -32,6 +32,9 @@ export const aiService = {
                 body: JSON.stringify({
                     messages,
                     context,
+                    farms,
+                    weather,
+                    user_name: userName,
                 }),
             });
 

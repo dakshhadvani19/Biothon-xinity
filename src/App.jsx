@@ -1,5 +1,6 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route, Link, useLocation } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from './context/AuthContext';
 import { motion } from 'framer-motion';
 import { Leaf, AlertTriangle, User } from 'lucide-react';
 import Dashboard from './views/Dashboard';
@@ -10,6 +11,7 @@ import UpdatesDashboard from './views/UpdatesDashboard';
 import Chat from './views/Chat';
 import NutrientAnalysis from './views/NutrientAnalysis';
 import Profile from './views/Profile';
+import Guide from './views/Guide';
 import { AuthProvider } from './context/AuthContext';
 
 import useLiveWeather from './hooks/useLiveWeather';
@@ -27,6 +29,7 @@ const NavLinks = () => {
     { name: 'Feed', path: '/feed' },
     { name: 'Live Updates', path: '/updates' },
     { name: 'Chat', path: '/chat' },
+    { name: 'Guide', path: '/guide' },
   ];
 
   return (
@@ -66,6 +69,23 @@ const NavLinks = () => {
   );
 };
 
+// Handles redirect back to the page the user was on before Google OAuth
+const PostAuthRedirect = () => {
+  const { user, isLoading } = useAuth();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (isLoading || !user) return;
+    const savedPath = sessionStorage.getItem('agrishield_pre_auth_path');
+    if (savedPath && savedPath !== window.location.pathname) {
+      sessionStorage.removeItem('agrishield_pre_auth_path');
+      navigate(savedPath, { replace: true });
+    }
+  }, [user, isLoading, navigate]);
+
+  return null;
+};
+
 const App = () => {
   return (
     <Router>
@@ -97,6 +117,7 @@ const App = () => {
         <main className="container mx-auto p-4 md:p-6 flex-1 flex flex-col">
 
           <AuthProvider>
+            <PostAuthRedirect />
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/diagnostic" element={<Diagnostic />} />
@@ -106,6 +127,7 @@ const App = () => {
               <Route path="/updates" element={<UpdatesDashboard />} />
               <Route path="/chat" element={<Chat />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/guide" element={<Guide />} />
             </Routes>
           </AuthProvider>
         </main>

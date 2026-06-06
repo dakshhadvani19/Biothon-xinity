@@ -3,3 +3,5 @@ openai
 pydantic
 reportlab
 requests
+httpx
+python-multipart
