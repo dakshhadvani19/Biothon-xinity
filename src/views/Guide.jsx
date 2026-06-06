@@ -234,7 +234,7 @@ export default function Guide() {
 
   const apiBase = import.meta.env.DEV
     ? 'http://127.0.0.1:8000'
-    : 'https://biothon-xinity-vercel.vercel.app';
+    : (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
 
   // Load gallery + diagnostic logs simultaneously
   const openGallery = async () => {

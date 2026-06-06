@@ -74,9 +74,8 @@ export default function UpdatesDashboard() {
       const result = await aiService.sendTestReport(payload);
       setDirectResponse(result);
       
-      const resolvedPdfUrl = import.meta.env.DEV 
-        ? `http://127.0.0.1:8000/api/v1/pdf/${directEmail}` 
-        : `${window.location.origin}/api/v1/pdf/${directEmail}`;
+      const ML_ENGINE = import.meta.env.DEV ? 'http://127.0.0.1:8000' : (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
+      const resolvedPdfUrl = `${ML_ENGINE}/api/v1/pdf/${directEmail}`;
       
       setDirectPdfUrl(resolvedPdfUrl);
       
