@@ -4,8 +4,11 @@ import { motion } from 'framer-motion';
 import { Leaf, AlertTriangle, User } from 'lucide-react';
 import Dashboard from './views/Dashboard';
 import Diagnostic from './views/Diagnostic';
+import TryNewCrop from './views/TryNewCrop';
 import CommunityFeed from './views/CommunityFeed';
 import UpdatesDashboard from './views/UpdatesDashboard';
+import Chat from './views/Chat';
+import NutrientAnalysis from './views/NutrientAnalysis';
 import Profile from './views/Profile';
 import { AuthProvider } from './context/AuthContext';
 
@@ -19,8 +22,11 @@ const NavLinks = () => {
   const links = [
     { name: 'Dashboard', path: '/' },
     { name: 'Diagnostic', path: '/diagnostic' },
+    { name: 'Try New Name', path: '/try-new' },
+    { name: 'Nutrient Analysis', path: '/nutrient-analysis' },
     { name: 'Feed', path: '/feed' },
     { name: 'Live Updates', path: '/updates' },
+    { name: 'Chat', path: '/chat' },
   ];
 
   return (
@@ -94,8 +100,11 @@ const App = () => {
             <Routes>
               <Route path="/" element={<Dashboard />} />
               <Route path="/diagnostic" element={<Diagnostic />} />
+              <Route path="/try-new" element={<TryNewCrop />} />
+              <Route path="/nutrient-analysis" element={<NutrientAnalysis />} />
               <Route path="/feed" element={<CommunityFeed />} />
               <Route path="/updates" element={<UpdatesDashboard />} />
+              <Route path="/chat" element={<Chat />} />
               <Route path="/profile" element={<Profile />} />
             </Routes>
           </AuthProvider>

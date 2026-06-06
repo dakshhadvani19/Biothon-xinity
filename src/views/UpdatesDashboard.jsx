@@ -1,16 +1,105 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, Lightbulb } from 'lucide-react';
+import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, Lightbulb, Smartphone, Mail, Send, CheckCircle, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import useLiveWeather from '../hooks/useLiveWeather';
 import { fetchAIInsights } from '../services/weatherService';
 import WeatherBanner from '../components/WeatherBanner';
 import { useAuth } from '../context/AuthContext';
 import { farmService } from '../services/farmService';
+import { aiService } from '../services/aiService';
+
+const COUNTRIES = [
+    { name: 'India', code: '+91', flag: '🇮🇳' },
+    { name: 'United States', code: '+1', flag: '🇺🇸' },
+    { name: 'United Kingdom', code: '+44', flag: '🇬🇧' },
+    { name: 'Canada', code: '+1', flag: '🇨🇦' },
+    { name: 'Australia', code: '+61', flag: '🇦🇺' }
+];
 
 export default function UpdatesDashboard() {
   const { data, loading, error, refreshWeather, lastUpdated } = useLiveWeather();
   const { user } = useAuth();
   const [insights, setInsights] = useState([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(true);
+
+  // Guest Direct Report Dispatcher States
+  const [directEmail, setDirectEmail] = useState(localStorage.getItem('agrishield_direct_email') || '');
+  const [directPhoneBody, setDirectPhoneBody] = useState(localStorage.getItem('agrishield_direct_phone_body') || '');
+  const [directCountryCode, setDirectCountryCode] = useState('+91');
+  const [directDeliveryMode, setDirectDeliveryMode] = useState('SMS');
+  const [isDirectSending, setIsDirectSending] = useState(false);
+  const [directResponse, setDirectResponse] = useState(null);
+  const [directClientLinks, setDirectClientLinks] = useState(null);
+  const [directPdfUrl, setDirectPdfUrl] = useState('');
+
+  const handleDirectSend = async (e) => {
+    if (e) e.preventDefault();
+    if (!directEmail.trim()) {
+      alert("Please enter a valid email address.");
+      return;
+    }
+    if (!directPhoneBody.trim()) {
+      alert("Please enter a valid mobile phone number.");
+      return;
+    }
+    
+    setIsDirectSending(true);
+    setDirectResponse(null);
+    setDirectClientLinks(null);
+    setDirectPdfUrl('');
+    try {
+      const fullPhone = directCountryCode + directPhoneBody;
+      const payload = {
+        email: directEmail,
+        phone: fullPhone,
+        delivery_mode: directDeliveryMode,
+        enabled: true,
+        lat: data?.currentTemp ? (data.lat || 22.3039) : 22.3039,
+        lon: data?.currentTemp ? (data.lon || 70.8022) : 70.8022,
+        crops: [],
+        
+        // Auto-fill credentials under the hood
+        twilio_sid: localStorage.getItem('agrishield_twilio_sid') || '',
+        twilio_token: localStorage.getItem('agrishield_twilio_token') || '',
+        twilio_from: localStorage.getItem('agrishield_twilio_from') || '',
+        custom_smtp_host: localStorage.getItem('agrishield_smtp_host') || '',
+        custom_smtp_port: localStorage.getItem('agrishield_smtp_port') ? parseInt(localStorage.getItem('agrishield_smtp_port'), 10) : null,
+        custom_smtp_user: localStorage.getItem('agrishield_smtp_user') || '',
+        custom_smtp_pass: localStorage.getItem('agrishield_smtp_pass') || '',
+        custom_smtp_from: localStorage.getItem('agrishield_smtp_from') || '',
+        custom_telegram_bot_token: import.meta.env.VITE_TELEGRAM_BOT_TOKEN || '123456789:dummy_bot_token_alternative',
+        custom_telegram_chat_id: import.meta.env.VITE_TELEGRAM_CHAT_ID || 'dummy_chat_id_alternative'
+      };
+      
+      const result = await aiService.sendTestReport(payload);
+      setDirectResponse(result);
+      
+      const resolvedPdfUrl = import.meta.env.DEV 
+        ? `http://127.0.0.1:8000/api/v1/pdf/${directEmail}` 
+        : `${window.location.origin}/api/v1/pdf/${directEmail}`;
+      
+      setDirectPdfUrl(resolvedPdfUrl);
+      
+      const bodyText = `AgriShield Crop Health Report for ${directEmail}: Here is your automated crop health PDF: ${resolvedPdfUrl}`;
+      
+      setDirectClientLinks({
+        whatsapp: `https://api.whatsapp.com/send?phone=${encodeURIComponent(fullPhone)}&text=${encodeURIComponent(bodyText)}`,
+        sms: `sms:${fullPhone}?body=${encodeURIComponent(bodyText)}`,
+        email: `mailto:${directEmail}?subject=${encodeURIComponent("AgriShield Daily Crop Health & Action Advisory Report")}&body=${encodeURIComponent(bodyText)}`,
+        telegram: `https://t.me/share/url?url=${encodeURIComponent(resolvedPdfUrl)}&text=${encodeURIComponent(bodyText)}`
+      });
+      
+      localStorage.setItem('agrishield_direct_email', directEmail);
+      localStorage.setItem('agrishield_direct_phone_body', directPhoneBody);
+    } catch (err) {
+      console.error("Direct send report error:", err);
+      alert("Failed to request report from the server. Check if backend is active.");
+    } finally {
+      setIsDirectSending(false);
+    }
+  };
+
+
 
   useEffect(() => {
     const fetchInsights = async () => {
@@ -193,6 +282,196 @@ export default function UpdatesDashboard() {
           </div>
         )}
       </div>
+
+      {/* Direct Report Dispatcher Widget */}
+      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm mt-6 space-y-6">
+        <div className="border-b border-gray-100 dark:border-gray-800 pb-4">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+            <Smartphone className="w-5 h-5 text-green-500" />
+            Direct Report Dispatcher (No Account Needed)
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            Get the agricultural advisory report PDF dispatched directly to your mobile phone or email address instantly.
+          </p>
+        </div>
+
+        <form onSubmit={handleDirectSend} className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Email field */}
+            <div>
+              <label htmlFor="direct-email" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email Address</label>
+              <div className="relative">
+                <input 
+                  id="direct-email"
+                  type="email" 
+                  value={directEmail} 
+                  onChange={(e) => setDirectEmail(e.target.value)} 
+                  placeholder="e.g. farmer@agrishield.org" 
+                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 pl-10 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-medium text-sm" 
+                  required
+                />
+                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+              </div>
+            </div>
+
+            {/* Phone Number Field */}
+            <div>
+              <label htmlFor="direct-phone" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Mobile Phone Number</label>
+              <div className="flex gap-2">
+                <select
+                  aria-label="Country Code"
+                  value={directCountryCode}
+                  onChange={(e) => setDirectCountryCode(e.target.value)}
+                  className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-semibold text-sm cursor-pointer"
+                >
+                  {COUNTRIES.map(c => (
+                    <option key={`${c.code}-${c.name}`} value={c.code}>
+                      {c.flag} {c.code}
+                    </option>
+                  ))}
+                </select>
+                <input 
+                  id="direct-phone"
+                  type="text" 
+                  value={directPhoneBody} 
+                  onChange={(e) => setDirectPhoneBody(e.target.value.replace(/\D/g, ''))} 
+                  placeholder="e.g. 9876543210" 
+                  className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-medium text-sm" 
+                  required
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Delivery Mode Selection */}
+          <div>
+            <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Select Dispatch Channel</span>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {['SMS', 'WhatsApp', 'Email', 'Telegram'].map(mode => (
+                <button
+                  key={mode}
+                  type="button"
+                  onClick={() => setDirectDeliveryMode(mode)}
+                  className={`py-2.5 px-4 rounded-xl border text-sm font-bold transition-all ${
+                    directDeliveryMode === mode
+                      ? 'border-green-500 bg-green-50/50 dark:bg-green-950/20 text-green-700 dark:text-green-300'
+                      : 'border-gray-200 text-gray-500 hover:bg-gray-50 dark:border-gray-700 dark:text-gray-400 dark:hover:bg-gray-800'
+                  }`}
+                >
+                  {mode}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Submit Button */}
+          <button
+            type="submit"
+            disabled={isDirectSending}
+            className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-3.5 px-4 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-98 disabled:opacity-50"
+          >
+            {isDirectSending ? (
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                Generating & Dispatching PDF...
+              </>
+            ) : (
+              <>
+                <Send className="w-4 h-4" />
+                Dispatch PDF Report Direct to Mobile
+              </>
+            )}
+          </button>
+        </form>
+
+        {/* Dispatch response message */}
+        <AnimatePresence>
+          {directResponse && (
+            <motion.div 
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              className="p-6 rounded-2xl border border-green-200 dark:border-green-800 bg-green-50/30 dark:bg-green-950/10 space-y-6 text-sm"
+            >
+              <div className="flex items-center justify-between border-b border-green-200/40 dark:border-green-800/40 pb-3">
+                <div className="font-extrabold text-green-900 dark:text-green-300 flex items-center gap-1.5 text-base">
+                  <CheckCircle className="w-5 h-5 text-green-600 dark:text-green-400" />
+                  Advisory Report Generated Successfully!
+                </div>
+                {directResponse.pdf_url && (
+                  <a 
+                    href={import.meta.env.DEV ? `http://127.0.0.1:8000${directResponse.pdf_url}` : directResponse.pdf_url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-green-700 dark:text-green-400 hover:underline"
+                  >
+                    Download PDF Report
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-6 items-center">
+                {/* QR Code Column */}
+                {directPdfUrl && (
+                  <div className="md:col-span-2 flex flex-col items-center justify-center p-4 bg-white dark:bg-gray-800 rounded-2xl border border-green-100 dark:border-gray-700 shadow-sm text-center space-y-2.5">
+                    <img 
+                      src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(directPdfUrl)}`} 
+                      alt="PDF QR Code" 
+                      className="w-36 h-36 border border-gray-100 rounded-lg shadow-inner"
+                    />
+                    <div className="text-[11px] font-bold text-gray-500 uppercase tracking-wider">
+                      📷 Scan to Open PDF on Mobile
+                    </div>
+                  </div>
+                )}
+
+                {/* Direct App Launch Links Column */}
+                <div className="md:col-span-3 space-y-4">
+                  <div>
+                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider mb-1">Direct Client Dispatch (100% Works)</h4>
+                    <p className="text-xs text-gray-500">Launch your mobile/native app to send or share the report instantly.</p>
+                  </div>
+
+                  {directClientLinks && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <a 
+                        href={directClientLinks.whatsapp}
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-extrabold py-3 px-4 rounded-xl shadow-md transition-all active:scale-95 text-center"
+                      >
+                        Send via WhatsApp
+                      </a>
+                      <a 
+                        href={directClientLinks.sms}
+                        className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-extrabold py-3 px-4 rounded-xl shadow-md transition-all active:scale-95 text-center"
+                      >
+                        Send via SMS
+                      </a>
+                      <a 
+                        href={directClientLinks.email}
+                        className="flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-950 text-white text-xs font-extrabold py-3 px-4 rounded-xl shadow-md transition-all active:scale-95 text-center"
+                      >
+                        Send via Email App
+                      </a>
+                      <a 
+                        href={directClientLinks.telegram}
+                        target="_blank" 
+                        rel="noreferrer"
+                        className="flex items-center justify-center gap-2 bg-sky-500 hover:bg-sky-600 text-white text-xs font-extrabold py-3 px-4 rounded-xl shadow-md transition-all active:scale-95 text-center"
+                      >
+                        Share on Telegram
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
+
