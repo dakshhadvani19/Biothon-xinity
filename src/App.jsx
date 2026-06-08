@@ -49,15 +49,16 @@ const NavLinks = () => {
                 : 'text-gray-500 hover:text-green-700 hover:bg-green-50/80'
             }`}
           >
-            {/* Always render the background div — only visible when active.
-                This keeps layoutId alive across route changes so Framer Motion
-                can animate horizontally rather than from scratch each time. */}
-            <motion.div
-              layoutId="nav-indicator"
-              className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-[0_4px_12px_rgba(34,197,94,0.4)] z-0 border border-green-400"
-              animate={{ opacity: isActive ? 1 : 0 }}
-              transition={{ type: 'spring', bounce: 0.2, duration: 0.45 }}
-            />
+            {/* The layoutId shared layout animation ONLY works if the component is conditionally rendered.
+                When the active tab changes, Framer Motion automatically animates the bubble from the old 
+                tab to the new one. */}
+            {isActive && (
+              <motion.div
+                layoutId="nav-indicator"
+                className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-[0_4px_12px_rgba(34,197,94,0.4)] z-0 border border-green-400"
+                transition={{ type: 'spring', bounce: 0.15, duration: 0.5 }}
+              />
+            )}
             <span className="relative z-10 flex items-center gap-2">
               {link.name}
               {link.name === 'Live Updates' && hasAlerts && (

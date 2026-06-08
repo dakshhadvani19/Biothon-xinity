@@ -62,7 +62,7 @@ export default function Chat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Welcome to AgriShield AI Chat Advisor! \n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!",
+      content: "Welcome to AgriShield AI Chat Advisor!\n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!",
       content_hi: '',
       isWelcome: true,
     }
