@@ -49,6 +49,26 @@ export default function UpdatesDashboard() {
     setDirectPdfUrl('');
     try {
       const fullPhone = directCountryCode + directPhoneBody;
+
+      const twilioSid = localStorage.getItem('agrishield_twilio_sid') || '';
+      const twilioToken = localStorage.getItem('agrishield_twilio_token') || '';
+      
+      if (twilioSid && twilioToken) {
+        try {
+            const verification = await aiService.verifyPhoneNumber(fullPhone, twilioSid, twilioToken);
+            if (!verification.valid) {
+                alert(`Phone Verification Failed: ${verification.message}`);
+                setIsDirectSending(false);
+                return;
+            }
+        } catch (verifyErr) {
+            console.error("Verification error:", verifyErr);
+            alert("Failed to verify phone number with the backend.");
+            setIsDirectSending(false);
+            return;
+        }
+      }
+
       const payload = {
         email: directEmail,
         phone: fullPhone,

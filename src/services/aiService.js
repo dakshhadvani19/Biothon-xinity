@@ -72,6 +72,28 @@ export const aiService = {
         }
     },
 
+    verifyPhoneNumber: async (phone, twilioSid, twilioToken) => {
+        try {
+            const response = await fetch(`${BASE_URL}/api/v1/verify-phone`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ phone, twilio_sid: twilioSid, twilio_token: twilioToken }),
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                return { valid: false, message: errorData.detail || 'Invalid phone number' };
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("[aiService] verifyPhoneNumber error:", error);
+            throw error;
+        }
+    },
+
     sendTestReport: async (payload) => {
         try {
             const response = await fetch(`${BASE_URL}/api/v1/send-test-report`, {

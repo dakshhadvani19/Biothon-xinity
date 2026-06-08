@@ -178,6 +178,22 @@ export default function Profile() {
         }
         setIsSavingSettings(true);
         try {
+            if (twilioSid && twilioToken) {
+                try {
+                    const verification = await aiService.verifyPhoneNumber(phone, twilioSid, twilioToken);
+                    if (!verification.valid) {
+                        alert(`Phone Verification Failed: ${verification.message}`);
+                        setIsSavingSettings(false);
+                        return;
+                    }
+                } catch (verifyErr) {
+                    console.error("Verification error:", verifyErr);
+                    alert("Failed to verify phone number with the backend.");
+                    setIsSavingSettings(false);
+                    return;
+                }
+            }
+
             const coords = await getFarmerCoordinates();
             const payload = {
                 email: user.email,
@@ -232,6 +248,22 @@ export default function Profile() {
         setIsSendingTest(true);
         setTestResponse(null);
         try {
+            if (twilioSid && twilioToken) {
+                try {
+                    const verification = await aiService.verifyPhoneNumber(phone, twilioSid, twilioToken);
+                    if (!verification.valid) {
+                        alert(`Phone Verification Failed: ${verification.message}`);
+                        setIsSendingTest(false);
+                        return;
+                    }
+                } catch (verifyErr) {
+                    console.error("Verification error:", verifyErr);
+                    alert("Failed to verify phone number with the backend.");
+                    setIsSendingTest(false);
+                    return;
+                }
+            }
+
             const coords = await getFarmerCoordinates();
             const payload = {
                 email: user.email,
