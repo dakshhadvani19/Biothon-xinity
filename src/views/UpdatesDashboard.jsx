@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, Lightbulb, Smartphone, Mail, Send, CheckCircle, ArrowRight } from 'lucide-react';
+import { RefreshCw, AlertTriangle, CloudRain, Wind, Thermometer, Clock, Target, Lightbulb, Smartphone, Mail, Send, CheckCircle, ArrowRight, Volume2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import useLiveWeather from '../hooks/useLiveWeather';
 import { fetchAIInsights } from '../services/weatherService';
@@ -7,6 +7,7 @@ import WeatherBanner from '../components/WeatherBanner';
 import { useAuth } from '../context/AuthContext';
 import { farmService } from '../services/farmService';
 import { aiService } from '../services/aiService';
+import { useSpeech } from '../context/SpeechContext';
 
 const COUNTRIES = [
     { name: 'India', code: '+91', flag: '🇮🇳' },
@@ -19,7 +20,9 @@ const COUNTRIES = [
 export default function UpdatesDashboard() {
   const { data, loading, error, refreshWeather, lastUpdated } = useLiveWeather();
   const { user } = useAuth();
+  const { speak } = useSpeech();
   const [insights, setInsights] = useState([]);
+  const [insightsHi, setInsightsHi] = useState([]);
   const [isInsightsLoading, setIsInsightsLoading] = useState(true);
 
   // Guest Direct Report Dispatcher States
@@ -129,8 +132,15 @@ export default function UpdatesDashboard() {
           if (user) {
               activeFarms = await farmService.getUserFarms(user.$id);
           }
-          const dynamicInsights = await fetchAIInsights(data, activeFarms);
-          setInsights(dynamicInsights);
+          const result = await fetchAIInsights(data, activeFarms);
+          // Handle new bilingual format {insights_en, insights_hi} and old {insights}
+          if (Array.isArray(result)) {
+            setInsights(result);
+            setInsightsHi([]);
+          } else {
+            setInsights(result.insights_en || result.insights || []);
+            setInsightsHi(result.insights_hi || []);
+          }
         } finally {
           setIsInsightsLoading(false);
         }
@@ -291,11 +301,23 @@ export default function UpdatesDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {insights.map((insight, idx) => (
-              <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700/50 flex items-start gap-3">
-                <span className="text-green-500 font-bold shrink-0">✓</span>
-                <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
-                  {insight}
-                </p>
+              <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700/50 flex flex-col gap-2">
+                <div className="flex items-start gap-3">
+                  <span className="text-green-500 font-bold shrink-0">✓</span>
+                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+                    {insight}
+                  </p>
+                </div>
+                {insightsHi[idx] && (
+                  <button
+                    onClick={() => speak(insightsHi[idx], `सलाह ${idx + 1}`)}
+                    className="self-start flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 hover:bg-green-50 px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-green-200/50 mt-1"
+                    title="हिंदी में सुनें"
+                  >
+                    <Volume2 className="w-3.5 h-3.5" />
+                    हिंदी में सुनें
+                  </button>
+                )}
               </div>
             ))}
           </div>

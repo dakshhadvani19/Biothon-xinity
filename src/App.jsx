@@ -16,6 +16,8 @@ import { AuthProvider } from './context/AuthContext';
 
 import useLiveWeather from './hooks/useLiveWeather';
 import { Agentation } from "agentation";
+import { SpeechProvider } from './context/SpeechContext';
+import SpeechPlayer from './components/SpeechPlayer';
 
 const NavLinks = () => {
   const location = useLocation();
@@ -90,6 +92,7 @@ const PostAuthRedirect = () => {
 const App = () => {
   return (
     <Router>
+      <SpeechProvider>
       <div className="min-h-screen bg-gray-50 flex flex-col font-sans">
         <header className="sticky top-0 z-50 bg-white/70 backdrop-blur-lg border-b border-gray-200/50 shadow-sm transition-all overflow-x-hidden">
           <div className="container mx-auto px-4 h-auto min-h-[64px] py-2 flex flex-wrap items-center justify-between gap-y-4">
@@ -133,6 +136,8 @@ const App = () => {
           </AuthProvider>
         </main>
         
+        <SpeechPlayer />
+
         <footer className="bg-white border-t border-gray-200/50 p-6 text-center text-sm font-medium text-gray-400 mt-auto">
           &copy; {new Date().getFullYear()} AgriShield Ecosystem
         </footer>
@@ -140,6 +145,7 @@ const App = () => {
           <Agentation endpoint="http://localhost:4747" onSessionCreated={(sessionId) => console.log("Agentation Session:", sessionId)} />
         )}
       </div>
+      </SpeechProvider>
     </Router>
   );
 };

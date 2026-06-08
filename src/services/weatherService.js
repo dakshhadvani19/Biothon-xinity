@@ -188,17 +188,26 @@ export async function fetchAIInsights(weatherData, userFarms = []) {
         
         const payload = await response.json();
         
-        if (payload && Array.isArray(payload.insights)) {
-            return payload.insights;
+        // Return the full bilingual object for the new format; fall back gracefully
+        if (payload && (payload.insights_en || payload.insights_hi)) {
+            return {
+                insights_en: payload.insights_en || [],
+                insights_hi: payload.insights_hi || [],
+            };
+        } else if (payload && Array.isArray(payload.insights)) {
+            return { insights_en: payload.insights, insights_hi: [] };
         } else {
             throw new Error("Invalid format");
         }
     } catch (error) {
         console.error("🛑 FRONTEND BRIDGE EXCEPTION:", error);
-        return [
-            "AI operational parameters are syncing with regional crop coordinates.",
-            "Maintain baseline soil moisture checking schedules across standing plots.",
-            "Verify secondary irrigation equipment functionality."
-        ];
+        return {
+            insights_en: [
+                "AI operational parameters are syncing with regional crop coordinates.",
+                "Maintain baseline soil moisture checking schedules across standing plots.",
+                "Verify secondary irrigation equipment functionality."
+            ],
+            insights_hi: []
+        };
     }
 }

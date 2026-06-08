@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermometer, Wind, CloudRain } from 'lucide-react';
+import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermometer, Wind, CloudRain, Volume2 } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { farmService } from '../services/farmService';
 import { useAuth } from '../context/AuthContext';
 import useLiveWeather from '../hooks/useLiveWeather';
+import { useSpeech } from '../context/SpeechContext';
 
 // Renders markdown-like formatting: **bold**, bullet points, numbered lists
 function FormattedMessage({ content }) {
@@ -54,6 +55,7 @@ function FormattedMessage({ content }) {
 export default function Chat() {
   const { user } = useAuth();
   const { data: weatherData } = useLiveWeather();
+  const { speak } = useSpeech();
   const [farms, setFarms] = useState([]);
   const [farmsLoaded, setFarmsLoaded] = useState(false);
 
@@ -61,6 +63,7 @@ export default function Chat() {
     {
       role: 'assistant',
       content: "Welcome to AgriShield AI Chat Advisor! 🌾\n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!",
+      content_hi: '',
       isWelcome: true,
     }
   ]);
@@ -104,7 +107,7 @@ export default function Chat() {
     }
     welcomeText += "\nAsk me anything about your crops, soil, irrigation, pests, or fertilizers!";
 
-    setMessages([{ role: 'assistant', content: welcomeText, isWelcome: true }]);
+    setMessages([{ role: 'assistant', content: welcomeText, content_hi: '', isWelcome: true }]);
   }, [farmsLoaded, weatherData]);
 
   // Dynamic suggestion chips based on actual farm data
@@ -165,7 +168,10 @@ export default function Chat() {
         ctx.weather,
         ctx.userName
       );
-      setMessages(prev => [...prev, { role: 'assistant', content: response.content }]);
+      // Handle new bilingual response format {content_en, content_hi} and old {content}
+      const contentEn = response.content_en || response.content || '🌾 No response received.';
+      const contentHi = response.content_hi || '';
+      setMessages(prev => [...prev, { role: 'assistant', content: contentEn, content_hi: contentHi }]);
     } catch (error) {
       console.error('Chat failure:', error);
       setMessages(prev => [
@@ -181,6 +187,7 @@ export default function Chat() {
     setMessages([{
       role: 'assistant',
       content: '🌱 Chat cleared! What farming challenge can I help you with today?',
+      content_hi: '',
     }]);
   };
 
@@ -257,7 +264,19 @@ export default function Chat() {
                   {msg.role === 'user' ? (
                     <span>{msg.content}</span>
                   ) : (
-                    <FormattedMessage content={msg.content} />
+                    <>
+                      <FormattedMessage content={msg.content} />
+                      {msg.content_hi && !msg.isWelcome && (
+                        <button
+                          onClick={() => speak(msg.content_hi, 'AI सलाह')}
+                          className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 hover:bg-green-50 px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-green-200/50"
+                          title="हिंदी में सुनें"
+                        >
+                          <Volume2 className="w-3.5 h-3.5" />
+                          हिंदी में सुनें
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </motion.div>
