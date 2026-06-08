@@ -15,6 +15,7 @@ import Guide from './views/Guide';
 import { AuthProvider } from './context/AuthContext';
 
 import useLiveWeather from './hooks/useLiveWeather';
+import { Agentation } from "agentation";
 
 const NavLinks = () => {
   const location = useLocation();
@@ -135,6 +136,9 @@ const App = () => {
         <footer className="bg-white border-t border-gray-200/50 p-6 text-center text-sm font-medium text-gray-400 mt-auto">
           &copy; {new Date().getFullYear()} AgriShield Ecosystem
         </footer>
+        {window.location.origin === 'http://localhost:5174' && (
+          <Agentation endpoint="http://localhost:4747" onSessionCreated={(sessionId) => console.log("Agentation Session:", sessionId)} />
+        )}
       </div>
     </Router>
   );
