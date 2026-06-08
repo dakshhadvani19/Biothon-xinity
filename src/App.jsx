@@ -27,7 +27,7 @@ const NavLinks = () => {
   const links = [
     { name: 'Dashboard', path: '/' },
     { name: 'Diagnostic', path: '/diagnostic' },
-    { name: 'Try New Name', path: '/try-new' },
+    { name: 'Try New Crop', path: '/try-new' },
     { name: 'Nutrient Analysis', path: '/nutrient-analysis' },
     { name: 'Feed', path: '/feed' },
     { name: 'Live Updates', path: '/updates' },
@@ -43,19 +43,21 @@ const NavLinks = () => {
           <Link
             key={link.name}
             to={link.path}
-            className={`relative px-4 md:px-6 py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center whitespace-nowrap ${
-              isActive 
-                ? 'text-white' 
+            className={`relative px-4 md:px-6 py-2.5 rounded-full text-sm font-bold transition-colors duration-200 flex items-center whitespace-nowrap ${
+              isActive
+                ? 'text-white'
                 : 'text-gray-500 hover:text-green-700 hover:bg-green-50/80'
             }`}
           >
-            {isActive && (
-              <motion.div
-                layoutId="nav-indicator"
-                className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-[0_4px_12px_rgba(34,197,94,0.4)] z-0 border border-green-400"
-                transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-              />
-            )}
+            {/* Always render the background div — only visible when active.
+                This keeps layoutId alive across route changes so Framer Motion
+                can animate horizontally rather than from scratch each time. */}
+            <motion.div
+              layoutId="nav-indicator"
+              className="absolute inset-0 bg-gradient-to-r from-green-500 to-green-600 rounded-full shadow-[0_4px_12px_rgba(34,197,94,0.4)] z-0 border border-green-400"
+              animate={{ opacity: isActive ? 1 : 0 }}
+              transition={{ type: 'spring', bounce: 0.2, duration: 0.45 }}
+            />
             <span className="relative z-10 flex items-center gap-2">
               {link.name}
               {link.name === 'Live Updates' && hasAlerts && (

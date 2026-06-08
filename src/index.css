@@ -1,5 +1,11 @@
 @import "tailwindcss";
 
+/* Prevent navbar/layout shifting when scrollbar appears/disappears between pages */
+html {
+  scrollbar-gutter: stable;
+}
+
+
 @layer utilities {
   .google-border-hover {
     border-color: transparent;

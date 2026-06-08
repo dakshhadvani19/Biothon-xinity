@@ -62,7 +62,7 @@ export default function Chat() {
   const [messages, setMessages] = useState([
     {
       role: 'assistant',
-      content: "Welcome to AgriShield AI Chat Advisor! 🌾\n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!",
+      content: "Welcome to AgriShield AI Chat Advisor! \n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!",
       content_hi: '',
       isWelcome: true,
     }
@@ -95,7 +95,7 @@ export default function Chat() {
     if (!farmsLoaded) return;
     const farmCount = farms.length;
     const weatherReady = !!weatherData;
-    let welcomeText = "🌾 **AgriShield AI Advisor** is ready!\n\n";
+    let welcomeText = "**AgriShield AI Advisor** is ready!\n\n";
     if (farmCount > 0) {
       const farmSummary = farms.map(f => `**${f.crop}** (${f.soil} soil)`).join(', ');
       welcomeText += `I've loaded your ${farmCount} farm${farmCount > 1 ? 's' : ''}: ${farmSummary}.\n`;
@@ -169,14 +169,14 @@ export default function Chat() {
         ctx.userName
       );
       // Handle new bilingual response format {content_en, content_hi} and old {content}
-      const contentEn = response.content_en || response.content || '🌾 No response received.';
+      const contentEn = response.content_en || response.content || 'No response received.';
       const contentHi = response.content_hi || '';
       setMessages(prev => [...prev, { role: 'assistant', content: contentEn, content_hi: contentHi }]);
     } catch (error) {
       console.error('Chat failure:', error);
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: '🌾 I\'m temporarily unavailable. Please check your connection and try again.' }
+        { role: 'assistant', content: 'I\'m temporarily unavailable. Please check your connection and try again.' }
       ]);
     } finally {
       setIsLoading(false);
@@ -210,7 +210,6 @@ export default function Chat() {
           <div className="flex items-center gap-1.5">
             {farmsLoaded && (
               <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${farms.length > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
-                <Sprout className="w-3 h-3" />
                 {farms.length > 0 ? `${farms.length} farm${farms.length > 1 ? 's' : ''} loaded` : 'No farms'}
               </span>
             )}
