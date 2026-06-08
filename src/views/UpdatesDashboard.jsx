@@ -38,8 +38,8 @@ export default function UpdatesDashboard() {
       alert("Please enter a valid email address.");
       return;
     }
-    if (!directPhoneBody.trim()) {
-      alert("Please enter a valid mobile phone number.");
+    if (!directPhoneBody.trim() || directPhoneBody.trim().length !== 10) {
+      alert("Please enter a valid 10-digit mobile phone number.");
       return;
     }
     
@@ -335,6 +335,7 @@ export default function UpdatesDashboard() {
                   value={directPhoneBody} 
                   onChange={(e) => setDirectPhoneBody(e.target.value.replace(/\D/g, ''))} 
                   placeholder="e.g. 9876543210" 
+                  maxLength="10"
                   className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-medium text-sm" 
                   required
                 />

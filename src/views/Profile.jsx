@@ -172,8 +172,8 @@ export default function Profile() {
     const [testResponse, setTestResponse] = useState(null);
 
     const handleSaveSettings = async () => {
-        if (!phoneBody.trim()) {
-            alert("Please enter a valid mobile phone number.");
+        if (!phoneBody.trim() || phoneBody.trim().length !== 10) {
+            alert("Please enter a valid 10-digit mobile phone number.");
             return;
         }
         setIsSavingSettings(true);
@@ -225,8 +225,8 @@ export default function Profile() {
     };
 
     const handleSendTestReport = async () => {
-        if (!phoneBody.trim()) {
-            alert("Please enter a valid phone number first.");
+        if (!phoneBody.trim() || phoneBody.trim().length !== 10) {
+            alert("Please enter a valid 10-digit phone number first.");
             return;
         }
         setIsSendingTest(true);
@@ -405,6 +405,7 @@ export default function Profile() {
                                         value={phoneBody} 
                                         onChange={(e) => setPhoneBody(e.target.value.replace(/\D/g, ''))} 
                                         placeholder="e.g. 9876543210" 
+                                        maxLength="10"
                                         className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-medium text-sm" 
                                     />
                                 </div>
