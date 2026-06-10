@@ -210,16 +210,16 @@ const DiagnosticCapture = () => {
               <motion.div 
                 animate={{ y: [0, -8, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="bg-white p-6 rounded-full shadow-lg border border-green-100 group-hover:scale-110 transition-transform duration-300 z-10"
+                className="bg-emerald-900/60 p-6 rounded-full shadow-lg border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300 z-10"
               >
                 <Camera className="w-10 h-10 text-green-600" strokeWidth={2} />
               </motion.div>
               
               <div className="z-10 text-center px-4">
-                <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
+                <h3 className="text-2xl font-extrabold text-emerald-50 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
                   Tap to Scan
                 </h3>
-                <p className="text-gray-500 font-medium text-sm max-w-[250px] mt-2 mx-auto">
+                <p className="text-emerald-200/70 font-medium text-sm max-w-[250px] mt-2 mx-auto">
                   Capture a leaf to run AI Diagnostics
                 </p>
               </div>
@@ -236,7 +236,7 @@ const DiagnosticCapture = () => {
             exit={{ opacity: 0 }}
             className="space-y-6"
           >
-            <div className="relative overflow-hidden aspect-[4/3] bg-gray-100 rounded-3xl shadow-xl border border-gray-200/60 ring-4 ring-white">
+            <div className="relative overflow-hidden aspect-[4/3] bg-emerald-950/40 rounded-3xl shadow-2xl border border-emerald-500/20 ring-4 ring-emerald-900/50">
               <img
                 src={previewUrl}
                 alt="Crop preview"
@@ -263,7 +263,7 @@ const DiagnosticCapture = () => {
               <motion.div 
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-white/80 backdrop-blur-md border border-gray-100 rounded-3xl p-8 shadow-xl text-center relative max-w-sm mx-auto"
+                className="bg-emerald-950/60 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-8 shadow-xl text-center relative max-w-sm mx-auto"
               >
                 <motion.div 
                   animate={{ y: [0, -5, 0] }}
@@ -277,8 +277,8 @@ const DiagnosticCapture = () => {
                   <Lock className="w-10 h-10 text-pink-500" strokeWidth={2} />
                 </div>
                 
-                <h3 className="text-2xl font-extrabold text-gray-800 tracking-tight mb-2">Unlock AI Analysis</h3>
-                <p className="text-gray-500 font-medium mb-8 text-sm leading-relaxed px-2">
+                <h3 className="text-2xl font-extrabold text-emerald-50 tracking-tight mb-2">Unlock AI Analysis</h3>
+                <p className="text-emerald-200/70 font-medium mb-8 text-sm leading-relaxed px-2">
                   Please sign in for a better experience to save your crop scans and track health history.
                 </p>
 
@@ -302,7 +302,7 @@ const DiagnosticCapture = () => {
                       loginWithGoogle();
                     }
                   }}
-                  className="w-full bg-white border-2 border-gray-200 text-gray-700 font-bold text-lg py-3.5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-md google-border-hover"
+                  className="w-full bg-white border-2 border-gray-200 text-emerald-100 font-bold text-lg py-3.5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-md google-border-hover"
                 >
                   <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
                     <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
@@ -318,7 +318,7 @@ const DiagnosticCapture = () => {
                 <button
                   onClick={handleReset}
                   disabled={isLoading}
-                  className="py-3.5 bg-white border border-gray-200 text-gray-700 font-bold rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
+                  className="py-3.5 bg-white border border-gray-200 text-emerald-100 font-bold rounded-2xl hover:bg-gray-50 hover:border-gray-300 transition-all shadow-sm active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none"
                 >
                   Retake
                 </button>
@@ -326,7 +326,7 @@ const DiagnosticCapture = () => {
                 <button
                   onClick={handleUploadSubmit}
                   disabled={isLoading}
-                  className="py-3.5 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-green-500/30 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
+                  className="py-3.5 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-400 hover:to-emerald-400 text-white font-bold rounded-2xl transition-all shadow-lg hover:shadow-green-500/30 active:scale-[0.98] disabled:opacity-50 disabled:pointer-events-none flex items-center justify-center gap-2"
                 >
                   {isLoading ? (
                     <motion.div
@@ -366,12 +366,12 @@ const DiagnosticCapture = () => {
                </div>
             </div>
 
-            <div className="bg-white rounded-3xl p-6 md:p-8 shadow-xl border border-gray-100 space-y-6 relative overflow-hidden">
+            <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl border border-emerald-500/20 space-y-6 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500" />
               
-              <div className="flex flex-wrap items-start justify-between border-b border-gray-100 pb-5 mb-2 gap-4">
+              <div className="flex flex-wrap items-start justify-between border-b border-emerald-700/40 pb-5 mb-2 gap-4">
                 <div>
-                  <h3 className="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">{treatment.title}</h3>
+                  <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">{treatment.title}</h3>
                   <div className="flex items-center gap-3 mt-2">
                     <span className="bg-gray-100 text-gray-600 px-3 py-1 rounded-md text-xs font-semibold">
                       Confidence: {Number(resultData.confidence).toFixed(1)}%
@@ -391,7 +391,7 @@ const DiagnosticCapture = () => {
                     <span className="w-2 h-2 rounded-full bg-green-500"></span>
                     <strong className="text-green-800 uppercase text-xs font-bold tracking-widest">Organic Treatment</strong>
                   </div>
-                  <p className="text-gray-700 text-sm leading-relaxed pl-4 border-l-2 border-green-200">{treatment.organic}</p>
+                  <p className="text-emerald-100 text-sm leading-relaxed pl-4 border-l-2 border-green-200">{treatment.organic}</p>
                 </div>
 
                 <div className="bg-purple-50/50 rounded-2xl p-4 border border-purple-100 transition-all hover:bg-purple-50">
@@ -399,7 +399,7 @@ const DiagnosticCapture = () => {
                     <span className="w-2 h-2 rounded-full bg-purple-500"></span>
                     <strong className="text-purple-800 uppercase text-xs font-bold tracking-widest">Chemical Treatment</strong>
                   </div>
-                  <p className="text-gray-700 text-sm leading-relaxed pl-4 border-l-2 border-purple-200">{treatment.chemical}</p>
+                  <p className="text-emerald-100 text-sm leading-relaxed pl-4 border-l-2 border-purple-200">{treatment.chemical}</p>
                 </div>
 
                 <div className="bg-blue-50/50 rounded-2xl p-4 border border-blue-100 transition-all hover:bg-blue-50">
@@ -407,16 +407,16 @@ const DiagnosticCapture = () => {
                     <span className="w-2 h-2 rounded-full bg-blue-500"></span>
                     <strong className="text-blue-800 uppercase text-xs font-bold tracking-widest">Prevention</strong>
                   </div>
-                  <p className="text-gray-700 text-sm leading-relaxed pl-4 border-l-2 border-blue-200">{treatment.prevention}</p>
+                  <p className="text-emerald-100 text-sm leading-relaxed pl-4 border-l-2 border-blue-200">{treatment.prevention}</p>
                 </div>
               </div>
 
               <button
                 onClick={handleReset}
-                className="w-full bg-gray-50 hover:bg-gray-100 text-gray-800 font-bold text-lg py-4 mt-6 transition-all rounded-2xl border border-gray-200 active:scale-[0.98] flex items-center justify-center gap-2 group"
+                className="w-full bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-600/40 text-emerald-50 font-bold text-lg py-4 mt-6 transition-all rounded-2xl border border-gray-200 active:scale-[0.98] flex items-center justify-center gap-2 group"
               >
                 Scan Another Leaf
-                <ChevronRight className="w-5 h-5 text-gray-400 group-hover:text-gray-600 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
+                <ChevronRight className="w-5 h-5 text-emerald-300/60 group-hover:text-gray-600 group-hover:translate-x-1 transition-all" strokeWidth={2.5} />
               </button>
             </div>
           </motion.div>

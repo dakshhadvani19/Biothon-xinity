@@ -95,26 +95,26 @@ export default function NutrientAnalysis() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+    <div className="max-w-5xl mx-auto space-y-10 mt-12 md:mt-20 pb-16 px-4 sm:px-0">
       {/* Header section */}
-      <header className="mb-6">
-        <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-          <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-2xl shadow-md text-white">
-            <Apple className="w-6 h-6" />
+      <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
+        <h1 className="text-4xl font-extrabold text-white flex items-center gap-4 tracking-tight drop-shadow-sm">
+          <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-3 rounded-2xl shadow-[0_0_20px_rgba(52,211,153,0.3)] text-white">
+            <Apple className="w-7 h-7" />
           </div>
           Nutrient Analysis
         </h1>
-        <p className="text-gray-600 mt-2 text-lg">
+        <p className="text-emerald-100/70 mt-3 text-lg font-medium max-w-2xl">
           Explore detailed carbohydrates, vitamins, minerals, and health benefits of any plant, vegetable, or fruit.
         </p>
       </header>
 
       {/* Input panel */}
-      <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
+      <section className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-emerald-500/20 relative overflow-hidden p-6 md:p-8">
         <form onSubmit={(e) => handleAnalyze(e)} className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 space-y-5">
             <div>
-              <label htmlFor="plant-search" className="block text-sm font-extrabold text-gray-700 mb-2">
+              <label htmlFor="plant-search" className="block text-sm font-extrabold text-emerald-100 mb-2">
                 Enter Plant, Vegetable, or Fruit Name
               </label>
               <div className="relative">
@@ -124,15 +124,15 @@ export default function NutrientAnalysis() {
                   value={plantName}
                   onChange={(e) => setPlantName(e.target.value)}
                   placeholder="e.g. Moringa, Spinach, Avocado, Banana..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 pl-12 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all text-gray-800 font-medium shadow-inner placeholder-gray-400"
+                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 pl-12 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all text-emerald-50 font-medium shadow-inner placeholder-gray-400"
                 />
-                <Search className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                <Search className="w-5 h-5 text-emerald-300/60 absolute left-4 top-1/2 -translate-y-1/2" />
               </div>
             </div>
 
             {/* Quick Suggestions */}
             <div>
-              <span className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2.5">
+              <span className="block text-xs font-bold text-emerald-300/60 uppercase tracking-wider mb-2.5">
                 Popular suggestions
               </span>
               <div className="flex flex-wrap gap-2">
@@ -141,7 +141,7 @@ export default function NutrientAnalysis() {
                     key={item}
                     type="button"
                     onClick={() => handleSuggestionClick(item)}
-                    className="bg-gray-50 hover:bg-green-50/40 border border-gray-200 rounded-xl px-3.5 py-2 text-xs font-bold text-gray-600 hover:text-green-700 hover:border-green-300 transition-all active:scale-95"
+                    className="bg-emerald-900/30 hover:bg-emerald-800/50 border border-emerald-700/50 rounded-xl px-3.5 py-2 text-xs font-bold text-emerald-100/80 hover:text-emerald-300 hover:border-green-300 transition-all active:scale-95"
                   >
                     {item}
                   </button>
@@ -153,13 +153,13 @@ export default function NutrientAnalysis() {
           {/* Optional Image Upload */}
           <div className="flex flex-col justify-between space-y-4">
             <div>
-              <span className="block text-sm font-extrabold text-gray-700 mb-2 flex justify-between">
+              <span className="block text-sm font-extrabold text-emerald-100 mb-2 flex justify-between">
                 <span>Upload Plant Photo</span>
-                <span className="text-xs text-gray-400 font-semibold bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
+                <span className="text-xs text-emerald-300/60 font-semibold bg-emerald-900/50 border border-emerald-700/50 px-2.5 py-1 rounded-full">Optional</span>
               </span>
               <div 
                 onClick={triggerFileSelect}
-                className="border-2 border-dashed border-gray-200 hover:border-green-400 hover:bg-green-50/5 rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px]"
+                className="border-2 border-dashed border-emerald-700/50 hover:border-green-400/70 hover:bg-emerald-800/30 bg-emerald-900/20 rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px]"
               >
                 <input 
                   type="file" 
@@ -185,30 +185,34 @@ export default function NutrientAnalysis() {
                   </div>
                 ) : (
                   <>
-                    <UploadCloud className="w-6 h-6 text-gray-400 mb-2" />
-                    <span className="text-xs font-bold text-gray-600">Select Image</span>
+                    <UploadCloud className="w-6 h-6 text-emerald-300/60 mb-2" />
+                    <span className="text-xs font-bold text-emerald-100/80">Select Image</span>
                   </>
                 )}
               </div>
             </div>
 
-            <button
+            <motion.button
+              whileHover={{ scale: 1.02, boxShadow: "0 0 35px rgba(52,211,153,0.5)" }}
+              whileTap={{ scale: 0.97 }}
+              transition={{ type: "spring", stiffness: 400, damping: 25 }}
               type="submit"
               disabled={isAnalyzing}
-              className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all active:scale-98 disabled:opacity-50 flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-lg py-4.5 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50 mt-4 flex items-center justify-center gap-3 border border-green-400/40 relative overflow-hidden group"
             >
+              <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform skew-x-[-20deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none" />
               {isAnalyzing ? (
                 <>
-                  <RefreshCw className="w-5 h-5 animate-spin" />
-                  Analyzing Bio-Components...
+                  <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
+                  <span className="relative z-10">Analyzing Bio-Components...</span>
                 </>
               ) : (
                 <>
-                  <Sparkles className="w-5 h-5" />
-                  Analyze Nutritional Profile
+                  <Sparkles className="w-5 h-5 relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                  <span className="relative z-10 drop-shadow-md">Analyze Nutritional Profile</span>
                 </>
               )}
-            </button>
+            </motion.button>
           </div>
         </form>
 
@@ -228,7 +232,7 @@ export default function NutrientAnalysis() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="bg-white rounded-3xl p-12 border border-gray-100 shadow-sm flex flex-col items-center justify-center space-y-6 relative overflow-hidden"
+            className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-12 border border-emerald-500/20 shadow-2xl flex flex-col items-center justify-center space-y-6 relative overflow-hidden"
           >
             <motion.div 
               animate={{ y: ['-100%', '100%'] }}
@@ -240,8 +244,8 @@ export default function NutrientAnalysis() {
               <div className="absolute inset-0 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-xl font-bold text-gray-900">Calculating Bio-Nutrients</h3>
-              <p className="text-gray-500 max-w-sm text-sm">
+              <h3 className="text-xl font-bold text-white">Calculating Bio-Nutrients</h3>
+              <p className="text-emerald-200/70 max-w-sm text-sm">
                 Parsing plant identity, retrieving vitamin indices, carbohydrates ratio, and correlating health studies...
               </p>
             </div>
@@ -258,11 +262,11 @@ export default function NutrientAnalysis() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Left Column: Summary & Macronutrients */}
-              <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-6 md:col-span-1">
+              <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6 md:col-span-1">
                 <div className="text-center border-b border-gray-100 pb-5">
-                  <h2 className="text-2xl font-black text-gray-900 capitalize">{analysisResult.name}</h2>
+                  <h2 className="text-2xl font-black text-white capitalize">{analysisResult.name}</h2>
                   {analysisResult.detected_from_image && (
-                    <div className="inline-flex items-center gap-1 mt-1 bg-green-50 text-green-700 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border border-green-200 uppercase tracking-wider">
+                    <div className="inline-flex items-center gap-1 mt-1 bg-green-50 text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border border-green-200 uppercase tracking-wider">
                       📸 Detected from Image
                     </div>
                   )}
@@ -275,20 +279,20 @@ export default function NutrientAnalysis() {
                 </div>
 
                 <div>
-                  <h3 className="text-sm font-extrabold text-gray-800 mb-4 uppercase tracking-wider">Macronutrients Split</h3>
+                  <h3 className="text-sm font-extrabold text-emerald-50 mb-4 uppercase tracking-wider">Macronutrients Split</h3>
                   <div className="space-y-4">
                     {/* Carbs */}
                     {(() => {
                       const details = getMacroDetails('carbs');
                       return (
                         <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-gray-500">
+                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
                             <span>Carbohydrates</span>
-                            <span className="text-gray-900 font-extrabold">
+                            <span className="text-white font-extrabold">
                               {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
                             <div 
                               className="bg-yellow-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]" 
                               style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
@@ -303,13 +307,13 @@ export default function NutrientAnalysis() {
                       const details = getMacroDetails('protein');
                       return (
                         <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-gray-500">
+                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
                             <span>Protein</span>
-                            <span className="text-gray-900 font-extrabold">
+                            <span className="text-white font-extrabold">
                               {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
                             <div 
                               className="bg-green-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" 
                               style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
@@ -324,13 +328,13 @@ export default function NutrientAnalysis() {
                       const details = getMacroDetails('fiber');
                       return (
                         <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-gray-500">
+                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
                             <span>Dietary Fiber</span>
-                            <span className="text-gray-900 font-extrabold">
+                            <span className="text-white font-extrabold">
                               {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
                             <div 
                               className="bg-emerald-600 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(5,150,105,0.5)]" 
                               style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
@@ -345,13 +349,13 @@ export default function NutrientAnalysis() {
                       const details = getMacroDetails('fat');
                       return (
                         <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-gray-500">
+                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
                             <span>Fat</span>
-                            <span className="text-gray-900 font-extrabold">
+                            <span className="text-white font-extrabold">
                               {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
                             </span>
                           </div>
-                          <div className="w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
                             <div 
                               className="bg-red-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(248,113,113,0.5)]" 
                               style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
@@ -365,22 +369,22 @@ export default function NutrientAnalysis() {
               </div>
 
               {/* Right Column: Vitamins & Minerals */}
-              <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm md:col-span-2 space-y-6">
+              <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden md:col-span-2 space-y-6">
                 <div>
-                  <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 mb-3">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-3">
                     <Droplet className="w-5 h-5 text-blue-500" />
                     Micronutrient Composition
                   </h3>
-                  <p className="text-xs text-gray-400">Important vitamins and minerals per serving of {analysisResult.name}.</p>
+                  <p className="text-xs text-emerald-300/60">Important vitamins and minerals per serving of {analysisResult.name}.</p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   {/* Vitamins */}
                   <div className="space-y-3">
-                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Vitamins</h4>
+                    <h4 className="text-xs font-extrabold text-emerald-300/60 uppercase tracking-wider">Vitamins</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysisResult.vitamins?.map((vit, i) => (
-                        <span key={i} className="bg-green-50 text-green-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-green-200/50">
+                        <span key={i} className="bg-green-50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-green-200/50">
                           {vit}
                         </span>
                       ))}
@@ -389,7 +393,7 @@ export default function NutrientAnalysis() {
 
                   {/* Minerals */}
                   <div className="space-y-3">
-                    <h4 className="text-xs font-extrabold text-gray-400 uppercase tracking-wider">Minerals</h4>
+                    <h4 className="text-xs font-extrabold text-emerald-300/60 uppercase tracking-wider">Minerals</h4>
                     <div className="flex flex-wrap gap-2">
                       {analysisResult.minerals?.map((min, i) => (
                         <span key={i} className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-200/50">
@@ -403,9 +407,9 @@ export default function NutrientAnalysis() {
             </div>
 
             {/* Health & Medicinal Benefits Grid */}
-            <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-6">
+            <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6">
               <div>
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2">
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
                   <Heart className="w-5 h-5 text-red-500" />
                   Health & Medicinal Benefits
                 </h3>
@@ -413,28 +417,28 @@ export default function NutrientAnalysis() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {analysisResult.health_benefits?.map((benefit, i) => (
-                  <div key={i} className="bg-gray-50/50 border border-gray-100 rounded-2xl p-5 space-y-2">
-                    <h4 className="font-extrabold text-sm text-gray-800 flex items-center gap-1.5">
+                  <div key={i} className="bg-emerald-900/30 border border-emerald-700/30 backdrop-blur-sm rounded-2xl p-5 space-y-2">
+                    <h4 className="font-extrabold text-sm text-emerald-50 flex items-center gap-1.5">
                       <span className="text-green-500">✓</span>
                       {benefit.title}
                     </h4>
-                    <p className="text-xs text-gray-500 leading-relaxed">{benefit.description}</p>
+                    <p className="text-xs text-emerald-200/70 leading-relaxed">{benefit.description}</p>
                   </div>
                 ))}
               </div>
             </div>
 
             {/* Usage/Preparation Tips */}
-            <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-3xl p-6 md:p-8 border border-green-100 shadow-sm space-y-4">
-              <h3 className="text-lg font-bold text-green-900 flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-green-700" />
+            <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-sm space-y-4">
+              <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-emerald-300" />
                 Consumption & Preparation Guidelines
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {analysisResult.usage_tips?.map((tip, i) => (
-                  <div key={i} className="bg-white/60 p-4 rounded-xl border border-green-100/50 flex gap-2.5 items-start">
+                  <div key={i} className="bg-emerald-900/30 border border-emerald-700/30 backdrop-blur-sm p-4 rounded-xl flex gap-2.5 items-start">
                     <span className="text-green-600 font-extrabold text-sm shrink-0">💡</span>
-                    <p className="text-xs text-green-800 leading-relaxed font-medium">{tip}</p>
+                    <p className="text-xs text-emerald-100 leading-relaxed font-medium">{tip}</p>
                   </div>
                 ))}
               </div>
