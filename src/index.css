@@ -1,8 +1,11 @@
 @import "tailwindcss";
 
 /* Prevent navbar/layout shifting when scrollbar appears/disappears between pages */
-html {
-  scrollbar-gutter: stable;
+@layer base {
+  html, body {
+    scrollbar-gutter: stable;
+    @apply bg-[#0A0F0A] text-gray-100;
+  }
 }
 
 

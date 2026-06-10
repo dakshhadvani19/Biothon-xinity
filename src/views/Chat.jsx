@@ -192,17 +192,17 @@ export default function Chat() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-12 flex flex-col" style={{ height: 'calc(100vh - 140px)', minHeight: '520px' }}>
+    <div className="max-w-4xl mx-auto space-y-4 pb-12 flex flex-col pt-8" style={{ height: 'calc(100vh - 40px)', minHeight: '520px' }}>
       {/* Header */}
       <header className="flex items-start justify-between shrink-0 gap-4">
         <div>
-          <h1 className="text-2xl font-extrabold text-gray-900 flex items-center gap-3">
+          <h1 className="text-2xl font-extrabold text-white flex items-center gap-3">
             <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-2xl shadow-md text-white">
               <MessageSquare className="w-5 h-5" />
             </div>
-            AgriShield AI Advisor
+            AgriShield Chat Assistant
           </h1>
-          <p className="text-gray-500 text-sm mt-1">Personalized farming advice powered by your farm data.</p>
+          <p className="text-gray-400 text-sm mt-1">Interactive agricultural support engine for diagnostics and tutorials</p>
         </div>
 
         <div className="flex items-center gap-2 shrink-0">
@@ -234,7 +234,7 @@ export default function Chat() {
       </header>
 
       {/* Main chat window */}
-      <div className="bg-white rounded-3xl border border-gray-100 shadow-sm flex flex-col flex-1 overflow-hidden">
+      <div className="bg-[#0D150D] rounded-2xl border border-[#1C2A1C] shadow-sm flex flex-col flex-1 overflow-hidden">
 
         {/* Messages feed */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -257,7 +257,7 @@ export default function Chat() {
                   className={`max-w-[78%] rounded-2xl px-5 py-3.5 text-[14.5px] leading-relaxed shadow-sm ${
                     msg.role === 'user'
                       ? 'bg-gradient-to-r from-green-500 to-green-600 text-white rounded-br-none font-medium'
-                      : 'bg-gray-50 border border-gray-150 text-gray-800 rounded-bl-none'
+                      : 'bg-[#111A11] border border-[#1C2A1C] text-gray-300 rounded-bl-none'
                   }`}
                 >
                   {msg.role === 'user' ? (
@@ -324,17 +324,17 @@ export default function Chat() {
         )}
 
         {/* Input bar */}
-        <div className="p-4 bg-white border-t border-gray-100 shrink-0">
+        <div className="p-4 bg-[#0D150D] border-t border-[#1C2A1C] shrink-0">
           <form
             onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-            className="flex gap-3 bg-gray-50 border border-gray-200/80 rounded-2xl p-1.5 focus-within:ring-2 focus-within:ring-green-400 focus-within:bg-white transition-all shadow-inner"
+            className="flex gap-3 bg-[#111A11] border border-[#1C2A1C] rounded-2xl p-1.5 focus-within:ring-1 focus-within:ring-green-500 transition-all shadow-inner"
           >
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               placeholder={farms.length > 0 ? `Ask about your ${farms[0]?.crop} or any crop challenge...` : 'Ask about crops, soil, pests, irrigation...'}
-              className="flex-1 bg-transparent border-none outline-none px-4 py-3 text-sm text-gray-800 placeholder-gray-400"
+              className="flex-1 bg-transparent border-none outline-none px-4 py-3 text-sm text-white placeholder-gray-500"
             />
             <button
               type="submit"

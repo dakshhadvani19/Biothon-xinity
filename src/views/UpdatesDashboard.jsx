@@ -191,30 +191,36 @@ export default function UpdatesDashboard() {
     <div className="w-full max-w-6xl mx-auto space-y-6 pb-12 mt-4">
       <WeatherBanner />
       {/* Header Section */}
-      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100 flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
-        <div className="flex items-center gap-6">
-          <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-500 shadow-inner">
+      <div className="mb-6">
+        <h1 className="text-3xl font-black text-white tracking-tight">Weather & Farming Advisory</h1>
+        <p className="text-gray-400 mt-1">Predictive microclimate analytics and adaptive farm activity planning</p>
+      </div>
+
+      <div className="bg-[#0D150D] rounded-2xl p-6 md:p-8 shadow-sm border border-[#1C2A1C] flex flex-col md:flex-row justify-between items-center md:items-start gap-6">
+        <div className="flex items-center gap-6 w-full md:w-auto">
+          <div className="w-20 h-20 bg-[#111A11] border border-[#1C2A1C] rounded-2xl flex items-center justify-center text-blue-400 shadow-inner">
             <Thermometer className="w-10 h-10" />
           </div>
           <div>
-            <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">
+            <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Current Conditions</div>
+            <h2 className="text-4xl font-extrabold text-white tracking-tight">
               {data.currentTemp}°C
-            </h1>
-            <p className="text-xl font-medium text-gray-500 mt-1">{data.condition}</p>
+            </h2>
+            <p className="text-lg font-medium text-gray-300 mt-1">{data.condition}</p>
           </div>
         </div>
         
-        <div className="flex flex-col items-center md:items-end gap-3">
+        <div className="flex flex-col items-center md:items-end gap-3 mt-4 md:mt-0">
           <button 
             onClick={refreshWeather}
             disabled={loading}
-            className="flex items-center gap-2 px-5 py-2.5 bg-gray-900 text-white rounded-xl font-semibold hover:bg-gray-800 transition-all active:scale-95 disabled:opacity-50"
+            className="flex items-center gap-2 px-5 py-2.5 bg-[#111A11] border border-[#1C2A1C] text-gray-300 rounded-xl font-semibold hover:text-white hover:bg-[#1A251A] transition-all active:scale-95 disabled:opacity-50"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
             {loading ? 'Syncing...' : 'Force Sync'}
           </button>
-          <div className="flex items-center gap-1.5 text-sm text-gray-400 font-medium">
-            <Clock className="w-4 h-4" />
+          <div className="flex items-center gap-1.5 text-xs text-gray-500 font-bold">
+            <Clock className="w-3.5 h-3.5" />
             Last Updated: {formatLastUpdated(lastUpdated)}
           </div>
         </div>
@@ -244,13 +250,13 @@ export default function UpdatesDashboard() {
       )}
 
       {/* 48-Hour Forecast Timeline */}
-      <div className="bg-white rounded-3xl p-6 md:p-8 shadow-sm border border-gray-100">
-        <h2 className="text-lg font-bold text-gray-900 mb-6 flex items-center gap-2">
-          <Clock className="w-5 h-5 text-blue-500" />
+      <div className="bg-[#0D150D] rounded-2xl p-6 md:p-8 shadow-sm border border-[#1C2A1C] mt-6">
+        <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+          <Clock className="w-5 h-5 text-green-500" />
           48-Hour Atmospheric Forecast
         </h2>
         
-        <div className="flex overflow-x-auto gap-4 pb-4 snap-x relative">
+        <div className="flex overflow-x-auto gap-4 pb-4 snap-x relative custom-scrollbar">
           {data.hourlyForecast.map((hour, idx) => {
             const isImminentRain = hour.rainChance > 50;
             return (
@@ -258,19 +264,19 @@ export default function UpdatesDashboard() {
                 key={idx} 
                 className={`min-w-[140px] snap-start shrink-0 rounded-2xl p-5 border flex flex-col items-center text-center transition-all ${
                   isImminentRain 
-                    ? 'bg-blue-50 border-blue-200 shadow-sm' 
-                    : 'bg-gray-50 border-gray-100 hover:bg-gray-100'
+                    ? 'bg-[#111A11] border-blue-900/50 shadow-sm' 
+                    : 'bg-[#111A11] border-[#1C2A1C] hover:bg-[#1A251A]'
                 }`}
               >
-                <div className="text-gray-500 text-sm font-bold mb-3">
+                <div className="text-green-500 text-sm font-bold mb-3">
                   {formatTime(hour.timestamp)}
                 </div>
-                <div className="text-3xl font-black text-gray-900 mb-4">
+                <div className="text-3xl font-black text-white mb-4">
                   {hour.temp}°
                 </div>
                 
                 <div className="w-full space-y-2">
-                  <div className={`flex items-center justify-center gap-1.5 text-sm font-bold ${isImminentRain ? 'text-blue-600' : 'text-gray-400'}`}>
+                  <div className={`flex items-center justify-center gap-1.5 text-sm font-bold ${isImminentRain ? 'text-blue-400' : 'text-gray-400'}`}>
                     <CloudRain className="w-4 h-4" />
                     {hour.rainChance}%
                   </div>
@@ -286,32 +292,34 @@ export default function UpdatesDashboard() {
       </div>
 
       {/* AI Agronomic Intelligence Advisory */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-xl p-6 shadow-sm mt-6">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-6 flex items-center gap-2">
-          <Lightbulb className="w-5 h-5 text-yellow-500" />
-          AI Agronomic Intelligence Advisory
+      <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-6 shadow-sm mt-6">
+        <h2 className="text-lg font-bold text-white mb-6 flex items-center gap-2">
+          <Lightbulb className="w-5 h-5 text-green-500" />
+          Farming Task Advisories
         </h2>
         
         {isInsightsLoading ? (
           <div className="space-y-4 animate-pulse">
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-full"></div>
-            <div className="h-4 bg-gray-200 dark:bg-gray-700 rounded w-3/4"></div>
+            <div className="h-4 bg-[#111A11] rounded w-full"></div>
+            <div className="h-4 bg-[#111A11] rounded w-full"></div>
+            <div className="h-4 bg-[#111A11] rounded w-3/4"></div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-1 gap-4">
             {insights.map((insight, idx) => (
-              <div key={idx} className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4 border border-gray-100 dark:border-gray-700/50 flex flex-col gap-2">
-                <div className="flex items-start gap-3">
-                  <span className="text-green-500 font-bold shrink-0">✓</span>
-                  <p className="text-gray-700 dark:text-gray-300 text-sm leading-relaxed">
+              <div key={idx} className="bg-[#111A11] rounded-xl p-4 border border-[#1C2A1C] flex flex-col gap-2">
+                <div className="flex items-start gap-4">
+                  <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-xs font-bold text-green-500 shrink-0">
+                    {idx + 1}
+                  </div>
+                  <p className="text-gray-300 text-sm leading-relaxed mt-0.5">
                     {insight}
                   </p>
                 </div>
                 {insightsHi[idx] && (
                   <button
                     onClick={() => speak(insightsHi[idx], `सलाह ${idx + 1}`)}
-                    className="self-start flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 hover:bg-green-50 px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-green-200/50 mt-1"
+                    className="ml-10 self-start flex items-center gap-1.5 text-xs font-bold text-green-500 hover:text-green-400 bg-[#1A251A] px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-[#1C2A1C] mt-1"
                     title="हिंदी में सुनें"
                   >
                     <Volume2 className="w-3.5 h-3.5" />
@@ -325,13 +333,13 @@ export default function UpdatesDashboard() {
       </div>
 
       {/* Direct Report Dispatcher Widget */}
-      <div className="bg-white dark:bg-gray-900 border border-gray-100 dark:border-gray-800 rounded-3xl p-6 md:p-8 shadow-sm mt-6 space-y-6">
-        <div className="border-b border-gray-100 dark:border-gray-800 pb-4">
-          <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
+      <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-6 md:p-8 shadow-sm mt-6 space-y-6">
+        <div className="border-b border-[#1C2A1C] pb-4">
+          <h2 className="text-xl font-bold text-white flex items-center gap-2">
             <Smartphone className="w-5 h-5 text-green-500" />
             Direct Report Dispatcher (No Account Needed)
           </h2>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-sm text-gray-400 mt-1">
             Get the agricultural advisory report PDF dispatched directly to your mobile phone or email address instantly.
           </p>
         </div>
@@ -340,7 +348,7 @@ export default function UpdatesDashboard() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Email field */}
             <div>
-              <label htmlFor="direct-email" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Email Address</label>
+              <label htmlFor="direct-email" className="block text-xs font-bold text-green-500 uppercase tracking-wider mb-2">Email Address</label>
               <div className="relative">
                 <input 
                   id="direct-email"
@@ -348,22 +356,22 @@ export default function UpdatesDashboard() {
                   value={directEmail} 
                   onChange={(e) => setDirectEmail(e.target.value)} 
                   placeholder="e.g. farmer@agrishield.org" 
-                  className="w-full bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 pl-10 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-medium text-sm" 
+                  className="w-full bg-[#111A11] border border-[#1C2A1C] rounded-lg px-4 py-2.5 pl-10 focus:ring-1 focus:ring-green-500 text-white outline-none font-medium text-sm transition-colors" 
                   required
                 />
-                <Mail className="w-4 h-4 text-gray-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                <Mail className="w-4 h-4 text-gray-500 absolute left-3.5 top-1/2 -translate-y-1/2" />
               </div>
             </div>
 
             {/* Phone Number Field */}
             <div>
-              <label htmlFor="direct-phone" className="block text-xs font-bold text-gray-400 uppercase tracking-wider mb-2">Mobile Phone Number</label>
+              <label htmlFor="direct-phone" className="block text-xs font-bold text-green-500 uppercase tracking-wider mb-2">Mobile Phone Number</label>
               <div className="flex gap-2">
                 <select
                   aria-label="Country Code"
                   value={directCountryCode}
                   onChange={(e) => setDirectCountryCode(e.target.value)}
-                  className="bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-semibold text-sm cursor-pointer"
+                  className="bg-[#111A11] border border-[#1C2A1C] rounded-lg px-3 py-2.5 focus:ring-1 focus:ring-green-500 text-white outline-none font-semibold text-sm cursor-pointer"
                 >
                   {COUNTRIES.map(c => (
                     <option key={`${c.code}-${c.name}`} value={c.code}>
@@ -378,7 +386,7 @@ export default function UpdatesDashboard() {
                   onChange={(e) => setDirectPhoneBody(e.target.value.replace(/\D/g, ''))} 
                   placeholder="e.g. 9876543210" 
                   maxLength="10"
-                  className="flex-1 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-500 dark:text-white outline-none font-medium text-sm" 
+                  className="flex-1 bg-[#111A11] border border-[#1C2A1C] rounded-lg px-4 py-2.5 focus:ring-1 focus:ring-green-500 text-white outline-none font-medium text-sm transition-colors" 
                   required
                 />
               </div>
