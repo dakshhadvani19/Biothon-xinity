@@ -209,7 +209,7 @@ export default function NutrientAnalysis() {
               ) : (
                 <>
                   <Sparkles className="w-5 h-5 relative z-10 group-hover:scale-125 transition-transform duration-300" />
-                  <span className="relative z-10 drop-shadow-md">Analyze Nutritional Profile</span>
+                  <span className="relative z-10 drop-shadow-md">Analyze Nutritions</span>
                 </>
               )}
             </motion.button>
