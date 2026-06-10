@@ -2,11 +2,13 @@ import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Apple, Search, Flame, Droplet, Sparkles, 
-  Heart, BookOpen, UploadCloud, RefreshCw, AlertTriangle, Trash2
+  Heart, BookOpen, UploadCloud, RefreshCw, AlertTriangle, Trash2, Volume2
 } from 'lucide-react';
 import { aiService } from '../services/aiService';
+import { useSpeech } from '../context/SpeechContext';
 
 export default function NutrientAnalysis() {
+  const { speak } = useSpeech();
   const [plantName, setPlantName] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
@@ -33,6 +35,31 @@ export default function NutrientAnalysis() {
 
   // Quick suggestion chips
   const suggestions = ["Moringa", "Spinach", "Avocado", "Garlic", "Pomegranate"];
+
+  // Build a 100% pure Hindi narration from structured result data
+  const buildNutritionHindi = (result) => {
+    if (!result) return '';
+    const name = result.name || 'यह पौधा';
+    const calories = result.calories || 'अज्ञात';
+    const macros = result.macronutrients || {};
+    const carbs = macros.carbs?.value || 'अज्ञात';
+    const protein = macros.protein?.value || 'अज्ञात';
+    const fat = macros.fat?.value || 'अज्ञात';
+    const fiber = macros.fiber?.value || 'अज्ञात';
+    const benefits = (result.health_benefits || []).slice(0, 3).map(b => b.title).join('। ');
+    const tips = (result.usage_tips || []).slice(0, 2).join('। ');
+
+    return (
+      `${name} के पोषण विश्लेषण की रिपोर्ट। ` +
+      `प्रति सौ ग्राम में कैलोरी: ${calories}। ` +
+      `कार्बोहाइड्रेट: ${carbs}। ` +
+      `प्रोटीन: ${protein}। ` +
+      `वसा: ${fat}। ` +
+      `रेशा: ${fiber}। ` +
+      (benefits ? `मुख्य स्वास्थ्य लाभ: ${benefits}। ` : '') +
+      (tips ? `उपयोग सुझाव: ${tips}।` : '')
+    );
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
@@ -344,6 +371,17 @@ export default function NutrientAnalysis() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
+            {/* Hindi Voice Button */}
+            <div className="flex justify-end">
+              <button
+                onClick={() => speak(buildNutritionHindi(analysisResult), `${analysisResult.name} - पोषण रिपोर्ट`)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-bold text-sm rounded-xl border border-emerald-600/40 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+              >
+                <Volume2 className="w-4 h-4 text-emerald-400" />
+                हिंदी में सुनें
+              </button>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Left Column: Summary & Macronutrients */}

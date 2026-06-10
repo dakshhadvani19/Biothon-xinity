@@ -522,7 +522,7 @@ export default function TryNewCrop() {
             {/* Hindi Voice Button - top of the whole report */}
             <div className="flex justify-end">
               <button
-                onClick={() => speak(buildHindiSummary(analysisResult, cropName), `${cropName} - उपयुक्तता रिपोर्ट`)}
+                onClick={() => speak(analysisResult.hindi_narration || `${cropName} फसल की उपयुक्तता रिपोर्ट। अनुकूलता स्कोर ${analysisResult.suitability_score} प्रतिशत है।`, `${cropName} - उपयुक्तता रिपोर्ट`)}
                 className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-bold text-sm rounded-xl border border-emerald-600/40 transition-all active:scale-95 shadow-lg backdrop-blur-md"
               >
                 <Volume2 className="w-4 h-4 text-emerald-400" />
