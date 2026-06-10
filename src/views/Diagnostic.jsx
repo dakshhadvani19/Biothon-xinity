@@ -12,7 +12,7 @@ const Diagnostic = () => {
             </div>
             Field Diagnostics
           </h1>
-          <p className="text-emerald-100/70 mt-3 text-lg font-medium max-w-2xl">Scan crops for instant pathogen detection and health analysis.</p>
+          <p className="text-emerald-100/70 mt-3 text-lg font-medium max-w-2xl">Scan crops for instant disease  detection and health analysis.</p>
         </div>
       </header>
 

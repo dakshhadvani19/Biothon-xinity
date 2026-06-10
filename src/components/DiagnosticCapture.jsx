@@ -219,9 +219,6 @@ const DiagnosticCapture = () => {
                 <h3 className="text-2xl font-extrabold text-emerald-100 tracking-tight group-hover:text-white transition-colors">
                   Tap to Scan
                 </h3>
-                <p className="text-emerald-300/80 group-hover:text-emerald-100 font-medium text-sm max-w-[250px] mt-2 mx-auto transition-colors">
-                  Capture a leaf to run AI Diagnostics
-                </p>
               </div>
             </button>
           </motion.div>
