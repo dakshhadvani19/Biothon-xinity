@@ -210,16 +210,16 @@ const DiagnosticCapture = () => {
               <motion.div 
                 animate={{ y: [0, -8, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-                className="bg-emerald-900/60 p-6 rounded-full shadow-lg border border-emerald-500/30 group-hover:scale-110 transition-transform duration-300 z-10"
+                className="bg-emerald-900/60 p-6 rounded-full shadow-lg border border-emerald-500/30 group-hover:scale-110 group-hover:bg-emerald-800/80 transition-all duration-300 z-10"
               >
-                <Camera className="w-10 h-10 text-green-600" strokeWidth={2} />
+                <Camera className="w-10 h-10 text-green-400" strokeWidth={2} />
               </motion.div>
               
               <div className="z-10 text-center px-4">
-                <h3 className="text-2xl font-extrabold text-emerald-50 tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-green-600 to-emerald-600">
+                <h3 className="text-2xl font-extrabold text-emerald-100 tracking-tight group-hover:text-white transition-colors">
                   Tap to Scan
                 </h3>
-                <p className="text-emerald-200/70 font-medium text-sm max-w-[250px] mt-2 mx-auto">
+                <p className="text-emerald-300/80 group-hover:text-emerald-100 font-medium text-sm max-w-[250px] mt-2 mx-auto transition-colors">
                   Capture a leaf to run AI Diagnostics
                 </p>
               </div>
