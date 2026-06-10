@@ -371,18 +371,43 @@ export default function NutrientAnalysis() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8"
           >
-            {/* Hindi Voice Button */}
-            <div className="flex justify-end">
-              <button
-                onClick={() => speak(buildNutritionHindi(analysisResult), `${analysisResult.name} - पोषण रिपोर्ट`)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-bold text-sm rounded-xl border border-emerald-600/40 transition-all active:scale-95 shadow-lg backdrop-blur-md"
-              >
-                <Volume2 className="w-4 h-4 text-emerald-400" />
-                हिंदी में सुनें
-              </button>
-            </div>
+            {(analysisResult.calories === 'N/A' && getMacroDetails('carbs').value === '0g') || analysisResult.calories === 'N/A' ? (
+              <div className="bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/20 shadow-2xl rounded-3xl p-10 text-center relative overflow-hidden mt-8">
+                <div className="absolute inset-0 bg-gradient-to-b from-transparent to-red-900/10 pointer-events-none" />
+                <AlertTriangle className="w-16 h-16 text-emerald-400/60 mx-auto mb-4" />
+                <h2 className="text-3xl font-black text-white mb-3">Data Unavailable</h2>
+                <p className="text-emerald-100/70 text-lg max-w-lg mx-auto mb-8">
+                  We couldn't extract reliable nutritional data for <span className="text-emerald-300 font-bold capitalize">"{analysisResult.name}"</span>. This usually happens if the plant name is uncommon, misspelled, or lacks standard dietary records.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <button
+                    onClick={() => { setAnalysisResult(null); setPlantName(''); triggerFileSelect(); }}
+                    className="bg-emerald-900/40 hover:bg-emerald-800/60 border border-emerald-600/40 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg backdrop-blur-md active:scale-95"
+                  >
+                    Try with an Image
+                  </button>
+                  <button
+                    onClick={() => { setAnalysisResult(null); setPlantName(''); document.getElementById('plant-search')?.focus(); }}
+                    className="bg-gradient-to-r from-green-500 to-emerald-600 text-white font-bold py-3 px-8 rounded-xl shadow-[0_0_20px_rgba(34,197,94,0.3)] transition-all hover:scale-105 active:scale-95"
+                  >
+                    Search Again
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {/* Hindi Voice Button */}
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => speak(buildNutritionHindi(analysisResult), `${analysisResult.name} - पोषण रिपोर्ट`)}
+                    className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-bold text-sm rounded-xl border border-emerald-600/40 transition-all active:scale-95 shadow-lg backdrop-blur-md"
+                  >
+                    <Volume2 className="w-4 h-4 text-emerald-400" />
+                    हिंदी में सुनें
+                  </button>
+                </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               
               {/* Left Column: Summary & Macronutrients */}
               <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6 md:col-span-1">
@@ -566,7 +591,7 @@ export default function NutrientAnalysis() {
                 ))}
               </div>
             </div>
-
+          </>
           </motion.div>
         )}
       </AnimatePresence>
