@@ -134,5 +134,29 @@ export const aiService = {
             console.error("[aiService] analyzeNutrition error:", error);
             throw error;
         }
+    },
+
+    validateImageCrop: async (payload) => {
+        // payload: { crop_name: string, image: string (base64 data URI) }
+        try {
+            const response = await fetch(`${BASE_URL}/api/v1/validate-image-crop`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(payload),
+            });
+
+            if (!response.ok) {
+                // On network error, allow through so we don't block the user
+                return { valid: true, detected_as: 'unknown', reason: 'Validation check skipped.' };
+            }
+
+            return await response.json();
+        } catch (error) {
+            console.error("[aiService] validateImageCrop error:", error);
+            // On any error, allow through gracefully
+            return { valid: true, detected_as: 'unknown', reason: 'Validation check skipped.' };
+        }
     }
 };

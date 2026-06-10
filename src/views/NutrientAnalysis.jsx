@@ -13,8 +13,10 @@ export default function NutrientAnalysis() {
   const fileInputRef = useRef(null);
 
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
+  const [validationError, setValidationError] = useState(null);
 
   // Helper to safely extract value and percentage for macronutrients
   const getMacroDetails = (key) => {
@@ -62,9 +64,37 @@ export default function NutrientAnalysis() {
       return;
     }
 
-    setIsAnalyzing(true);
     setError(null);
+    setValidationError(null);
     setAnalysisResult(null);
+
+    // Step 1: If an image is uploaded AND a name is provided, validate they match
+    if (selectedFile && queryName.trim() && !customName) {
+      setIsValidating(true);
+      try {
+        const base64 = await readFileAsBase64(selectedFile);
+        const validation = await aiService.validateImageCrop({
+          crop_name: queryName,
+          image: base64,
+        });
+        if (!validation.valid) {
+          setValidationError({
+            detected_as: validation.detected_as,
+            reason: validation.reason,
+            queryName,
+          });
+          setIsValidating(false);
+          return;
+        }
+      } catch (err) {
+        console.warn("Image validation failed, proceeding anyway:", err);
+      } finally {
+        setIsValidating(false);
+      }
+    }
+
+    // Step 2: Proceed with actual analysis
+    setIsAnalyzing(true);
 
     try {
       let payload = { name: queryName };
@@ -197,11 +227,16 @@ export default function NutrientAnalysis() {
               whileTap={{ scale: 0.97 }}
               transition={{ type: "spring", stiffness: 400, damping: 25 }}
               type="submit"
-              disabled={isAnalyzing}
+              disabled={isAnalyzing || isValidating}
               className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-lg py-4.5 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50 mt-4 flex items-center justify-center gap-3 border border-green-400/40 relative overflow-hidden group"
             >
               <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform skew-x-[-20deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none" />
-              {isAnalyzing ? (
+              {isValidating ? (
+                <>
+                  <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
+                  <span className="relative z-10">Verifying Image Match...</span>
+                </>
+              ) : isAnalyzing ? (
                 <>
                   <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
                   <span className="relative z-10">Analyzing Bio-Components...</span>
@@ -217,11 +252,61 @@ export default function NutrientAnalysis() {
         </form>
 
         {error && (
-          <div className="mt-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
+          <div className="mt-6 bg-red-900/40 border border-red-500/50 text-red-200 rounded-2xl p-4 text-sm font-semibold flex items-center gap-3 backdrop-blur-sm shadow-lg">
+            <AlertTriangle className="w-5 h-5 shrink-0 text-red-400" />
             {error}
           </div>
         )}
+
+        {/* Image-Crop Mismatch Validation Error */}
+        <AnimatePresence>
+          {validationError && (
+            <motion.div
+              initial={{ opacity: 0, y: 16, scale: 0.96 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.96 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+              className="mt-6 relative overflow-hidden rounded-3xl border border-orange-500/40 bg-gradient-to-br from-orange-950/60 to-red-950/50 backdrop-blur-xl shadow-2xl p-6"
+            >
+              <div className="absolute -top-10 -right-10 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
+              <div className="flex items-start gap-4">
+                <div className="bg-orange-500/20 border border-orange-400/40 p-3 rounded-2xl shrink-0 shadow-inner">
+                  <AlertTriangle className="w-7 h-7 text-orange-400" />
+                </div>
+                <div className="space-y-2 flex-1">
+                  <h3 className="text-lg font-extrabold text-orange-100 tracking-tight">Image Mismatch Detected 🚫</h3>
+                  <p className="text-sm text-orange-200/80 leading-relaxed">
+                    You entered <span className="font-bold text-white bg-orange-500/30 px-2 py-0.5 rounded-lg">{validationError.queryName}</span>,
+                    but the image appears to show a{' '}
+                    <span className="font-bold text-white bg-red-500/30 px-2 py-0.5 rounded-lg">{validationError.detected_as}</span>.
+                  </p>
+                  {validationError.reason && (
+                    <p className="text-xs text-orange-300/70 leading-relaxed border-l-2 border-orange-500/40 pl-3 mt-1">{validationError.reason}</p>
+                  )}
+                  <div className="mt-4 bg-emerald-950/40 border border-emerald-700/40 rounded-2xl p-3 text-xs text-emerald-200/80 leading-relaxed">
+                    <span className="font-bold text-emerald-300">💡 What to do: </span>
+                    Upload a clear photo of <span className="font-bold text-white">{validationError.queryName}</span> —
+                    or remove the image and analyze by name only.
+                  </div>
+                  <div className="flex gap-3 mt-4">
+                    <button
+                      onClick={() => { setValidationError(null); setSelectedFile(null); setImagePreview(null); }}
+                      className="flex-1 bg-emerald-900/50 hover:bg-emerald-800/70 border border-emerald-600/40 text-emerald-100 font-bold text-sm py-2.5 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                      Remove Image & Retry
+                    </button>
+                    <button
+                      onClick={() => setValidationError(null)}
+                      className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-400/40 text-orange-100 font-bold text-sm py-2.5 rounded-xl transition-all active:scale-[0.98]"
+                    >
+                      Upload Correct Image
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </section>
 
       {/* Analysis Results */}

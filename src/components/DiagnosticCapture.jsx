@@ -216,7 +216,7 @@ const DiagnosticCapture = () => {
               </motion.div>
               
               <div className="z-10 text-center px-4">
-                <h3 className="text-2xl font-extrabold text-emerald-100 tracking-tight group-hover:text-white transition-colors">
+                <h3 className="text-2xl font-extrabold text-emerald-100 tracking-tight group-hover:text-green-400 group-hover:drop-shadow-[0_0_10px_rgba(74,222,128,0.8)] transition-all duration-300">
                   Tap to Scan
                 </h3>
               </div>
