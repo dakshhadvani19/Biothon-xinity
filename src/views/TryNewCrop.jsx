@@ -202,7 +202,7 @@ export default function TryNewCrop() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-10 pb-16 px-4 sm:px-0">
+    <div className="max-w-5xl mx-auto space-y-10 mt-12 md:mt-20 pb-16 px-4 sm:px-0">
       {/* Header section */}
       <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
@@ -354,23 +354,28 @@ export default function TryNewCrop() {
               </div>
 
               {/* Submit Button */}
-              <button
+              <motion.button
+                whileHover={{ scale: 1.02, boxShadow: "0 0 35px rgba(52,211,153,0.5)" }}
+                whileTap={{ scale: 0.97 }}
+                transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 type="submit"
                 disabled={isAnalyzing}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 mt-8 flex items-center justify-center gap-3 border border-green-400/30"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-lg py-4.5 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50 mt-8 flex items-center justify-center gap-3 border border-green-400/40 relative overflow-hidden group"
               >
+                {/* Premium shine effect */}
+                <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform skew-x-[-20deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none" />
                 {isAnalyzing ? (
                   <>
-                    <RefreshCw className="w-5 h-5 animate-spin" />
-                    Crunching Climate Telemetry...
+                    <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
+                    <span className="relative z-10">Crunching Climate Telemetry...</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-5 h-5" />
-                    Analyze Suitability
+                    <Sparkles className="w-5 h-5 relative z-10 group-hover:scale-125 transition-transform duration-300" />
+                    <span className="relative z-10 drop-shadow-md">Analyze Suitability</span>
                   </>
                 )}
-              </button>
+              </motion.button>
             </div>
           </div>
         </form>
