@@ -592,6 +592,7 @@ export default function NutrientAnalysis() {
               </div>
             </div>
           </>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
