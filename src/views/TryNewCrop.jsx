@@ -202,40 +202,40 @@ export default function TryNewCrop() {
   };
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8 pb-16">
+    <div className="max-w-5xl mx-auto space-y-10 pb-16 px-4 sm:px-0">
       {/* Header section */}
-      <header className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 flex items-center gap-3">
-            <div className="bg-gradient-to-br from-green-500 to-emerald-600 p-2 rounded-2xl shadow-md text-white">
+          <h1 className="text-4xl font-extrabold text-white flex items-center gap-4 tracking-tight drop-shadow-sm">
+            <div className="bg-gradient-to-br from-green-400 to-emerald-600 p-3 rounded-2xl shadow-[0_0_20px_rgba(52,211,153,0.3)] text-white">
               <Sprout className="w-6 h-6" />
             </div>
             Try New Crop Advisor
           </h1>
-          <p className="text-gray-600 mt-2 text-lg">
+          <p className="text-emerald-100/70 mt-3 text-lg font-medium max-w-2xl">
             Verify if a new plant is suitable for your specific soil type and seasonal weather.
           </p>
         </div>
 
         {/* Geolocation status badge */}
-        <div className="bg-white border border-gray-200 rounded-2xl px-4 py-2.5 shadow-sm flex items-center gap-3 self-start md:self-auto">
-          <div className="bg-green-50 p-2 rounded-full text-green-600 animate-pulse">
+        <div className="bg-emerald-950/60 backdrop-blur-md border border-emerald-700/50 rounded-2xl px-5 py-3 shadow-lg flex items-center gap-4 self-start md:self-auto">
+          <div className="bg-emerald-500/20 p-2.5 rounded-full text-emerald-400 animate-pulse border border-emerald-500/30">
             <MapPin className="w-4 h-4" />
           </div>
           <div className="text-left">
-            <div className="text-xs text-gray-400 font-bold uppercase tracking-wider">Present Location</div>
-            <div className="text-sm font-semibold text-gray-800 flex items-center gap-1.5">
+            <div className="text-xs text-emerald-400/80 font-bold uppercase tracking-wider mb-0.5">Present Location</div>
+            <div className="text-sm font-semibold text-emerald-50 flex items-center gap-2">
               {isSyncingLocation ? (
-                <span className="text-gray-400 font-normal">Detecting GPS...</span>
+                <span className="text-emerald-400/60 font-normal">Detecting GPS...</span>
               ) : coords ? (
                 <span>{coords.lat.toFixed(4)}, {coords.lon.toFixed(4)} {weatherData ? `(${weatherData.currentTemp}°C)` : ''}</span>
               ) : (
-                <span className="text-amber-600 font-medium">Rajkot, India (Default)</span>
+                <span className="text-amber-400 font-medium">Rajkot, India (Default)</span>
               )}
               <button 
                 onClick={syncLocationAndWeather} 
                 disabled={isSyncingLocation}
-                className="text-gray-400 hover:text-green-600 transition-colors ml-1"
+                className="text-emerald-400/50 hover:text-emerald-300 transition-colors ml-1 p-1 hover:bg-emerald-800/50 rounded-lg"
                 title="Sync Location"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${isSyncingLocation ? 'animate-spin' : ''}`} />
@@ -246,14 +246,15 @@ export default function TryNewCrop() {
       </header>
 
       {/* Main input form panel */}
-      <section className="bg-white rounded-3xl shadow-sm border border-gray-100 p-6 md:p-8">
-        <form onSubmit={handleAnalyze} className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <section className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-emerald-500/20 p-8 md:p-10 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
+        <form onSubmit={handleAnalyze} className="space-y-8 relative z-10">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
             
             {/* Left Inputs */}
-            <div className="space-y-5">
+            <div className="space-y-8 relative z-10">
               <div>
-                <label htmlFor="crop-name" className="block text-sm font-extrabold text-gray-700 mb-2">
+                <label htmlFor="crop-name" className="block text-sm font-bold text-emerald-100 mb-3 tracking-wide">
                   What plant/crop would you like to try?
                 </label>
                 <div className="relative">
@@ -264,14 +265,14 @@ export default function TryNewCrop() {
                     value={cropName}
                     onChange={(e) => setCropName(e.target.value)}
                     placeholder="e.g. Soybeans, Dragon Fruit, Chickpeas..."
-                    className="w-full bg-gray-50 border border-gray-200/80 rounded-2xl px-5 py-4 pl-12 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all text-gray-800 font-medium placeholder-gray-400 shadow-inner"
+                    className="w-full bg-emerald-900/40 border border-emerald-600/30 rounded-2xl px-6 py-4 pl-14 focus:ring-2 focus:ring-green-400/50 focus:border-green-400 focus:bg-emerald-900/60 outline-none transition-all text-white font-medium placeholder-emerald-400/40 shadow-inner"
                   />
-                  <Sparkles className="w-5 h-5 text-gray-400 absolute left-4 top-1/2 -translate-y-1/2" />
+                  <Sparkles className="w-5 h-5 text-emerald-400/60 absolute left-5 top-1/2 -translate-y-1/2" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-extrabold text-gray-700 mb-2">
+                <label className="block text-sm font-bold text-emerald-100 mb-3 tracking-wide">
                   What is the soil type of your plot?
                 </label>
                 <div className="grid grid-cols-2 gap-3">
@@ -280,10 +281,10 @@ export default function TryNewCrop() {
                       key={option}
                       type="button"
                       onClick={() => setSoilType(option)}
-                      className={`py-3 px-4 rounded-xl border text-sm font-bold transition-all duration-200 text-center ${
+                      className={`py-3.5 px-4 rounded-xl border text-sm font-bold transition-all duration-300 text-center backdrop-blur-sm ${
                         soilType === option
-                          ? 'border-green-500 bg-green-50/50 text-green-700 shadow-sm'
-                          : 'border-gray-200 text-gray-500 hover:border-gray-300 hover:bg-gray-50'
+                          ? 'border-green-400 bg-green-500/20 text-green-300 shadow-[0_0_15px_rgba(74,222,128,0.15)]'
+                          : 'border-emerald-700/50 text-emerald-300/70 hover:border-emerald-500/80 hover:bg-emerald-800/40 hover:text-emerald-200'
                       }`}
                     >
                       {option}
@@ -303,7 +304,7 @@ export default function TryNewCrop() {
                       value={customSoil}
                       onChange={(e) => setCustomSoil(e.target.value)}
                       placeholder="Specify soil type (e.g., Sandy Silt loam)"
-                      className="w-full bg-gray-50 border border-gray-200 rounded-xl px-4 py-3 outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all text-sm font-medium"
+                      className="w-full bg-emerald-900/40 border border-emerald-600/30 rounded-xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-green-400/50 focus:border-green-400 focus:bg-emerald-900/60 transition-all text-sm font-medium text-white placeholder-emerald-400/40"
                     />
                   </motion.div>
                 )}
@@ -313,16 +314,16 @@ export default function TryNewCrop() {
             {/* Right Side: Optional Image Selector */}
             <div className="flex flex-col justify-between">
               <div>
-                <span className="block text-sm font-extrabold text-gray-700 mb-2 flex items-center justify-between">
+                <span className="block text-sm font-bold text-emerald-100 tracking-wide flex items-center justify-between mb-3">
                   <span>Plant / Soil Image Selection</span>
-                  <span className="text-xs text-gray-400 font-semibold bg-gray-100 px-2 py-0.5 rounded-full">Optional</span>
+                  <span className="text-xs text-emerald-200/60 font-semibold bg-emerald-900/50 border border-emerald-700/50 px-2.5 py-1 rounded-full backdrop-blur-sm">Optional</span>
                 </span>
                 
                 <div 
                   onDragOver={handleDragOver}
                   onDrop={handleDrop}
                   onClick={triggerFileSelect}
-                  className="border-2 border-dashed border-gray-200 hover:border-green-400 hover:bg-green-50/5 rounded-2xl p-6 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[190px]"
+                  className="border-2 border-dashed border-emerald-700/50 hover:border-green-400/70 hover:bg-emerald-800/30 bg-emerald-900/20 rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[220px] group"
                 >
                   <input 
                     type="file" 
@@ -332,19 +333,19 @@ export default function TryNewCrop() {
                     className="hidden" 
                   />
                   {imagePreview ? (
-                    <div className="relative group rounded-xl overflow-hidden max-h-[170px] w-full">
+                    <div className="relative group/img rounded-xl overflow-hidden max-h-[190px] w-full shadow-lg border border-emerald-500/20">
                       <img src={imagePreview} alt="Crop preview" className="w-full h-full object-cover rounded-xl" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white font-semibold text-xs">
+                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white font-semibold text-sm backdrop-blur-sm">
                         Change Image
                       </div>
                     </div>
                   ) : (
                     <>
-                      <div className="bg-gray-50 p-4 rounded-full text-gray-400 group-hover:text-green-500 group-hover:bg-green-50 transition-all mb-3">
+                      <div className="bg-emerald-900/60 p-4 rounded-full text-emerald-400/70 group-hover:text-green-400 group-hover:bg-green-500/10 transition-all mb-4 border border-emerald-700/50 group-hover:border-green-500/30">
                         <UploadCloud className="w-8 h-8" />
                       </div>
-                      <h4 className="text-sm font-bold text-gray-700 mb-1">Drag & Drop Image</h4>
-                      <p className="text-xs text-gray-400 max-w-[200px] mx-auto">
+                      <h4 className="text-sm font-bold text-emerald-100 mb-2">Drag & Drop Image</h4>
+                      <p className="text-xs text-emerald-300/60 max-w-[220px] mx-auto leading-relaxed">
                         Upload a photo of the soil or plant type to help target the description.
                       </p>
                     </>
@@ -356,7 +357,7 @@ export default function TryNewCrop() {
               <button
                 type="submit"
                 disabled={isAnalyzing}
-                className="w-full bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-bold py-4 px-6 rounded-2xl shadow-md transition-all active:scale-98 disabled:opacity-50 mt-6 flex items-center justify-center gap-2"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-4 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.2)] hover:shadow-[0_0_30px_rgba(34,197,94,0.4)] transition-all active:scale-[0.98] disabled:opacity-50 mt-8 flex items-center justify-center gap-3 border border-green-400/30"
               >
                 {isAnalyzing ? (
                   <>
@@ -375,8 +376,8 @@ export default function TryNewCrop() {
         </form>
 
         {error && (
-          <div className="mt-6 bg-red-50 border border-red-200 text-red-700 rounded-2xl p-4 text-sm font-semibold flex items-center gap-2">
-            <AlertTriangle className="w-5 h-5 shrink-0" />
+          <div className="mt-6 bg-red-900/40 border border-red-500/50 text-red-200 rounded-2xl p-4 text-sm font-semibold flex items-center gap-3 backdrop-blur-sm shadow-lg">
+            <AlertTriangle className="w-5 h-5 shrink-0 text-red-400" />
             {error}
           </div>
         )}
@@ -390,22 +391,22 @@ export default function TryNewCrop() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="bg-white rounded-3xl p-12 border border-gray-100 shadow-sm flex flex-col items-center justify-center space-y-6 relative overflow-hidden"
+            className="bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-12 shadow-2xl flex flex-col items-center justify-center space-y-6 relative overflow-hidden"
           >
             <motion.div 
               animate={{ y: ['-100%', '100%'] }}
               transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-              className="w-full h-1.5 bg-green-500 shadow-[0_0_15px_rgba(34,197,94,1)] absolute top-0 left-0"
+              className="w-full h-1.5 bg-green-400 shadow-[0_0_20px_rgba(74,222,128,0.8)] absolute top-0 left-0"
             />
             <div className="relative">
-              <div className="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center text-green-600">
-                <Sprout className="w-10 h-10 animate-bounce" />
+              <div className="w-20 h-20 bg-emerald-900/50 rounded-full flex items-center justify-center text-green-400 border border-emerald-500/30">
+                <Sprout className="w-10 h-10 animate-bounce shadow-green-400/50" />
               </div>
-              <div className="absolute inset-0 border-4 border-green-500/20 border-t-green-500 rounded-full animate-spin" />
+              <div className="absolute inset-0 border-4 border-green-500/20 border-t-green-400 rounded-full animate-spin" />
             </div>
             <div className="text-center space-y-2">
-              <h3 className="text-xl font-bold text-gray-900">Assessing Crop Viability</h3>
-              <p className="text-gray-500 max-w-sm">
+              <h3 className="text-xl font-bold text-white drop-shadow-md">Assessing Crop Viability</h3>
+              <p className="text-emerald-200/70 max-w-sm font-medium">
                 Correlating region's latitude and longitude with global thermal constraints, annual rainfall profiles, and current soil conditions...
               </p>
             </div>
@@ -417,28 +418,29 @@ export default function TryNewCrop() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="space-y-8"
+            className="space-y-8 relative z-10"
           >
             {/* Hindi Voice Button - top of the whole report */}
             <div className="flex justify-end">
               <button
                 onClick={() => speak(buildHindiSummary(analysisResult, cropName), `${cropName} - उपयुक्तता रिपोर्ट`)}
-                className="flex items-center gap-2 px-4 py-2 bg-green-50 hover:bg-green-100 text-green-700 font-bold text-sm rounded-xl border border-green-200 transition-all active:scale-95 shadow-sm"
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-bold text-sm rounded-xl border border-emerald-600/40 transition-all active:scale-95 shadow-lg backdrop-blur-md"
               >
-                <Volume2 className="w-4 h-4" />
+                <Volume2 className="w-4 h-4 text-emerald-400" />
                 पूरी रिपोर्ट हिंदी में सुनें
               </button>
             </div>
-            <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-8 relative overflow-hidden">
+              <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
               {/* Suitability Radial Gauge */}
-              <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 pb-6 md:pb-0 md:pr-8 text-center">
+              <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-emerald-800/40 pb-6 md:pb-0 md:pr-8 text-center relative z-10">
                 <div className="relative w-40 h-40 flex items-center justify-center">
-                  <svg className="w-full h-full transform -rotate-90">
+                  <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_10px_rgba(74,222,128,0.1)]">
                     <circle 
                       cx="80" 
                       cy="80" 
                       r="65" 
-                      className="text-gray-100" 
+                      className="text-emerald-900/60" 
                       strokeWidth="10" 
                       stroke="currentColor" 
                       fill="transparent" 
@@ -447,12 +449,12 @@ export default function TryNewCrop() {
                       cx="80" 
                       cy="80" 
                       r="65" 
-                      className={`${
+                      className={`${ 
                         analysisResult.suitability_score >= 80 
-                          ? 'text-green-500' 
+                          ? 'text-green-400' 
                           : analysisResult.suitability_score >= 50 
-                            ? 'text-amber-500' 
-                            : 'text-red-500'
+                            ? 'text-amber-400' 
+                            : 'text-red-400'
                       }`} 
                       strokeWidth="10" 
                       strokeDasharray="408.4"
@@ -465,62 +467,62 @@ export default function TryNewCrop() {
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center">
-                    <span className="text-4xl font-extrabold text-gray-900">{analysisResult.suitability_score}%</span>
-                    <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">Compatibility</span>
+                    <span className="text-4xl font-extrabold text-white">{analysisResult.suitability_score}%</span>
+                    <span className="text-xs text-emerald-400/80 font-bold uppercase tracking-wider mb-0.5">Compatibility</span>
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-1">
-                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold shadow-sm ${
+                <div className="mt-5 space-y-1">
+                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold shadow-lg backdrop-blur-md ${
                     analysisResult.suitable === 'Highly Suitable'
-                      ? 'bg-green-50 text-green-700 border border-green-200'
+                      ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                       : analysisResult.suitable === 'Moderately Suitable'
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
-                        : 'bg-red-50 text-red-700 border border-red-200'
+                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
+                        : 'bg-red-500/20 text-red-300 border border-red-500/30'
                   }`}>
                     {analysisResult.suitable}
                   </span>
-                  <p className="text-xs text-gray-400 mt-2 font-medium">For typed crop: **{cropName}**</p>
+                  <p className="text-xs text-emerald-400/60 mt-2 font-medium">For typed crop: <span className="text-emerald-200">**{cropName}**</span></p>
                 </div>
               </div>
 
               {/* Compatibility Details (Weather, Soil, Climate) */}
-              <div className="md:col-span-2 space-y-6">
+              <div className="md:col-span-2 space-y-6 relative z-10">
                 <div>
-                  <h3 className="text-xl font-bold text-gray-900 flex items-center gap-2 mb-4">
-                    <BookOpen className="w-5 h-5 text-green-600" />
+                  <h3 className="text-xl font-bold text-white flex items-center gap-3 mb-4">
+                    <div className="bg-emerald-900/60 p-2 rounded-xl border border-emerald-700/50"><BookOpen className="w-5 h-5 text-green-400" /></div>
                     Scientific Suitability Breakdown
                   </h3>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-4 flex gap-3.5 items-start">
-                    <div className="bg-blue-50 p-2.5 rounded-xl text-blue-600 shrink-0">
+                  <div className="bg-emerald-900/30 border border-emerald-700/30 rounded-2xl p-4 flex gap-3.5 items-start backdrop-blur-sm">
+                    <div className="bg-blue-500/20 p-2.5 rounded-xl text-blue-300 shrink-0 border border-blue-500/20">
                       <Thermometer className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-gray-800">Atmospheric Feasibility</h4>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{analysisResult.weather_analysis}</p>
+                      <h4 className="text-sm font-bold text-emerald-100">Atmospheric Feasibility</h4>
+                      <p className="text-xs text-emerald-200/60 mt-1 leading-relaxed">{analysisResult.weather_analysis}</p>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-4 flex gap-3.5 items-start">
-                    <div className="bg-amber-50 p-2.5 rounded-xl text-amber-600 shrink-0">
+                  <div className="bg-emerald-900/30 border border-emerald-700/30 rounded-2xl p-4 flex gap-3.5 items-start backdrop-blur-sm">
+                    <div className="bg-amber-500/20 p-2.5 rounded-xl text-amber-300 shrink-0 border border-amber-500/20">
                       <Sprout className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-gray-800">Soil Condition Fit</h4>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{analysisResult.soil_analysis}</p>
+                      <h4 className="text-sm font-bold text-emerald-100">Soil Condition Fit</h4>
+                      <p className="text-xs text-emerald-200/60 mt-1 leading-relaxed">{analysisResult.soil_analysis}</p>
                     </div>
                   </div>
 
-                  <div className="bg-gray-50/50 border border-gray-100 rounded-2xl p-4 sm:col-span-2 flex gap-3.5 items-start">
-                    <div className="bg-green-50 p-2.5 rounded-xl text-green-600 shrink-0">
+                  <div className="bg-emerald-900/30 border border-emerald-700/30 rounded-2xl p-4 sm:col-span-2 flex gap-3.5 items-start backdrop-blur-sm">
+                    <div className="bg-green-500/20 p-2.5 rounded-xl text-green-300 shrink-0 border border-green-500/20">
                       <Calendar className="w-5 h-5" />
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-gray-800">Yearly & Seasonal Climate Trend</h4>
-                      <p className="text-xs text-gray-500 mt-1 leading-relaxed">{analysisResult.yearly_climate_analysis}</p>
+                      <h4 className="text-sm font-bold text-emerald-100">Yearly & Seasonal Climate Trend</h4>
+                      <p className="text-xs text-emerald-200/60 mt-1 leading-relaxed">{analysisResult.yearly_climate_analysis}</p>
                     </div>
                   </div>
                 </div>
@@ -528,32 +530,32 @@ export default function TryNewCrop() {
             </div>
 
             {/* Recommendations & Warnings Lists */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
-                  <CheckCircle2 className="w-5 h-5 text-green-500" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+              <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl space-y-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-3 border-b border-emerald-800/50 pb-4">
+                  <div className="bg-green-500/20 p-1.5 rounded-lg border border-green-500/30"><CheckCircle2 className="w-5 h-5 text-green-400" /></div>
                   Cultivation Recommendations
                 </h3>
-                <ul className="space-y-3">
+                <ul className="space-y-3 mt-2">
                   {analysisResult.recommendations?.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                      <span className="text-green-500 font-bold shrink-0 mt-0.5">✓</span>
-                      <span>{item}</span>
+                    <li key={idx} className="flex items-start gap-3 text-sm text-emerald-100/80">
+                      <span className="text-green-400 font-bold shrink-0 mt-0.5">✓</span>
+                      <span className="leading-relaxed">{item}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="bg-white rounded-3xl p-6 md:p-8 border border-gray-100 shadow-sm space-y-4">
-                <h3 className="text-lg font-bold text-gray-900 flex items-center gap-2 border-b border-gray-100 pb-3">
-                  <AlertTriangle className="w-5 h-5 text-amber-500" />
+              <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl space-y-4">
+                <h3 className="text-lg font-bold text-white flex items-center gap-3 border-b border-emerald-800/50 pb-4">
+                  <div className="bg-amber-500/20 p-1.5 rounded-lg border border-amber-500/30"><AlertTriangle className="w-5 h-5 text-amber-400" /></div>
                   Necessary Precautions
                 </h3>
-                <ul className="space-y-3">
+                <ul className="space-y-3 mt-2">
                   {analysisResult.precautions?.map((item, idx) => (
-                    <li key={idx} className="flex items-start gap-2 text-sm text-gray-600">
-                      <span className="text-amber-500 font-bold shrink-0 mt-0.5">⚠️</span>
-                      <span>{item}</span>
+                    <li key={idx} className="flex items-start gap-3 text-sm text-emerald-100/80">
+                      <span className="text-amber-400 font-bold shrink-0 mt-0.5">⚠️</span>
+                      <span className="leading-relaxed">{item}</span>
                     </li>
                   ))}
                 </ul>
@@ -561,41 +563,41 @@ export default function TryNewCrop() {
             </div>
 
             {/* INTEGRATED ADVISORY CHAT ON THE SAME PAGE */}
-            <div className="bg-gradient-to-br from-green-950 to-emerald-900 text-white rounded-3xl shadow-xl overflow-hidden border border-emerald-800">
-              <div className="p-6 border-b border-emerald-800/80 flex items-center justify-between">
+            <div className="bg-emerald-950/50 backdrop-blur-xl text-white rounded-3xl shadow-2xl overflow-hidden border border-emerald-500/20">
+              <div className="p-6 border-b border-emerald-800/50 flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="bg-emerald-800 p-2.5 rounded-xl">
+                  <div className="bg-emerald-800/60 p-2.5 rounded-xl border border-emerald-700/50">
                     <MessageSquare className="w-5 h-5 text-green-300" />
                   </div>
                   <div>
-                    <h3 className="font-bold text-lg">Agronomic Expert Chat Advisor</h3>
-                    <p className="text-xs text-emerald-300">Discuss planting instructions and ask follow-up agronomic questions.</p>
+                    <h3 className="font-bold text-lg text-white">Agronomic Expert Chat Advisor</h3>
+                    <p className="text-xs text-emerald-300/70 mt-0.5">Discuss planting instructions and ask follow-up agronomic questions.</p>
                   </div>
                 </div>
-                <div className="bg-emerald-800/60 px-3 py-1 rounded-full text-xs font-bold text-emerald-200 border border-emerald-700/50">
+                <div className="bg-emerald-800/60 px-3 py-1.5 rounded-full text-xs font-bold text-emerald-200 border border-emerald-700/50 shadow-inner">
                   Focus: {cropName}
                 </div>
               </div>
 
               {/* Chat Message Thread */}
-              <div className="h-80 overflow-y-auto p-6 space-y-4 bg-emerald-950/60">
+              <div className="h-80 overflow-y-auto p-6 space-y-4 bg-emerald-950/30">
                 {chatMessages.map((msg, idx) => (
                   <div 
                     key={idx} 
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
                     <div 
-                      className={`max-w-[80%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
+                      className={`max-w-[80%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
                         msg.role === 'user' 
-                          ? 'bg-gradient-to-r from-green-500 to-green-600 text-white rounded-br-none shadow-sm' 
-                          : 'bg-emerald-850/80 border border-emerald-800 text-emerald-50 rounded-bl-none shadow-inner whitespace-pre-wrap'
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-br-none shadow-[0_0_15px_rgba(34,197,94,0.15)] border border-green-400/30' 
+                          : 'bg-emerald-900/60 border border-emerald-700/50 text-emerald-50 rounded-bl-none shadow-lg whitespace-pre-wrap'
                       }`}
                     >
                       {msg.content}
                       {msg.role === 'assistant' && msg.content_hi && (
                         <button
                           onClick={() => speak(msg.content_hi, 'AI सलाह')}
-                          className="mt-2 flex items-center gap-1.5 text-xs font-bold text-emerald-300 hover:text-emerald-100 hover:bg-emerald-800/60 px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-emerald-700/50"
+                          className="mt-3 flex items-center gap-1.5 text-xs font-bold text-emerald-300 hover:text-emerald-100 hover:bg-emerald-800/80 px-3 py-1.5 rounded-lg transition-all active:scale-95 border border-emerald-600/40"
                         >
                           <Volume2 className="w-3.5 h-3.5" />
                           हिंदी में सुनें
@@ -606,13 +608,13 @@ export default function TryNewCrop() {
                 ))}
                 {isSendingChat && (
                   <div className="flex justify-start">
-                    <div className="bg-emerald-800/60 border border-emerald-700/50 rounded-2xl rounded-bl-none px-4 py-3 text-sm text-emerald-300 flex items-center gap-2">
+                    <div className="bg-emerald-900/60 border border-emerald-700/50 rounded-2xl rounded-bl-none px-5 py-3.5 text-sm text-emerald-300 flex items-center gap-2 shadow-lg">
                       <div className="flex gap-1">
-                        <span className="w-2 h-2 bg-emerald-300 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
-                        <span className="w-2 h-2 bg-emerald-300 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
-                        <span className="w-2 h-2 bg-emerald-300 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                        <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
                       </div>
-                      AI is typing...
+                      <span className="ml-1">AI is typing...</span>
                     </div>
                   </div>
                 )}
@@ -620,18 +622,18 @@ export default function TryNewCrop() {
               </div>
 
               {/* Chat Input Field */}
-              <form onSubmit={handleSendChat} className="p-4 bg-emerald-950 border-t border-emerald-800/80 flex gap-2">
+              <form onSubmit={handleSendChat} className="p-4 bg-emerald-950/80 border-t border-emerald-800/50 flex gap-3 backdrop-blur-md">
                 <input
                   type="text"
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   placeholder={`Ask a question about growing ${cropName}...`}
-                  className="flex-1 bg-emerald-900/40 border border-emerald-800 rounded-xl px-4 py-3 outline-none focus:border-green-500 focus:bg-emerald-900/60 text-sm placeholder-emerald-500 text-white transition-all"
+                  className="flex-1 bg-emerald-900/40 border border-emerald-700/50 rounded-xl px-5 py-3.5 outline-none focus:border-green-400 focus:bg-emerald-900/60 focus:ring-2 focus:ring-green-400/20 text-sm placeholder-emerald-500/70 text-white transition-all shadow-inner"
                 />
                 <button
                   type="submit"
                   disabled={!chatInput.trim() || isSendingChat}
-                  className="bg-green-500 hover:bg-green-600 disabled:opacity-50 text-white px-4 rounded-xl flex items-center justify-center transition-colors active:scale-95 shrink-0"
+                  className="bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 disabled:opacity-50 text-white px-5 rounded-xl flex items-center justify-center transition-all active:scale-[0.98] shrink-0 border border-green-400/30 shadow-[0_0_15px_rgba(34,197,94,0.15)] hover:shadow-[0_0_20px_rgba(34,197,94,0.25)]"
                 >
                   <Send className="w-4 h-4" />
                 </button>
