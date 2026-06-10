@@ -181,7 +181,7 @@ export default function NutrientAnalysis() {
                   value={plantName}
                   onChange={(e) => setPlantName(e.target.value)}
                   placeholder="e.g. Moringa, Spinach, Avocado, Banana..."
-                  className="w-full bg-gray-50 border border-gray-200 rounded-2xl px-5 py-4 pl-12 focus:ring-2 focus:ring-green-500 focus:bg-white outline-none transition-all text-emerald-50 font-medium shadow-inner placeholder-gray-400"
+                  className="w-full bg-emerald-900/40 border border-emerald-600/30 rounded-2xl px-5 py-4 pl-12 focus:ring-2 focus:ring-green-400/50 focus:border-green-400 focus:bg-emerald-900/60 outline-none transition-all text-white font-medium shadow-inner placeholder-emerald-400/40"
                 />
                 <Search className="w-5 h-5 text-emerald-300/60 absolute left-4 top-1/2 -translate-y-1/2" />
               </div>
