@@ -3,7 +3,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sprout, MapPin, Thermometer, Cloud, CheckCircle2, 
   AlertTriangle, UploadCloud, Send, MessageSquare, 
-  Calendar, RefreshCw, Sparkles, BookOpen, Volume2
+  Calendar, RefreshCw, Sparkles, BookOpen, Volume2,
+  BarChart3, Eye, Info
 } from 'lucide-react';
 import { getFarmerCoordinates, getSmartWeatherUpdates } from '../services/weatherService';
 import { aiService } from '../services/aiService';
@@ -149,23 +150,43 @@ export default function TryNewCrop() {
     const finalCoords = coords || { lat: 22.3039, lon: 70.8022 }; // Rajkot fallback
 
     try {
+      // Build payload — send image as raw base64 (no data: prefix) if available
+      let imageBase64 = null;
+      if (selectedFile) {
+        try {
+          const dataUrl = await readFileAsBase64(selectedFile);
+          imageBase64 = dataUrl.split(',')[1]; // strip the "data:image/jpeg;base64," prefix
+        } catch (imgErr) {
+          console.warn('Could not read image as base64:', imgErr);
+        }
+      }
+
       const payload = {
         crop_name: cropName,
         lat: finalCoords.lat,
         lon: finalCoords.lon,
         soil_type: finalSoil,
         current_temp: weatherData?.currentTemp || 0,
-        current_condition: weatherData?.condition || 'Unknown'
+        current_condition: weatherData?.condition || 'Unknown',
+        ...(imageBase64 && { image: imageBase64 }),
       };
 
       const result = await aiService.checkCropSuitability(payload);
+
+      // Handle "not in knowledge base" response
+      if (result.not_in_database) {
+        setError(result.message || `'${cropName}' is not in our knowledge base. Please try another crop.`);
+        setIsAnalyzing(false);
+        return;
+      }
+
       setAnalysisResult(result);
       
       // Initialize inline chat with a greeting
       setChatMessages([
         {
           role: 'assistant',
-          content: `Hello! I have completed the suitability report for growing **${cropName}** on your **${finalSoil}** land in this region. The analysis suggests it is **${result.suitable}** with a compatibility rating of **${result.suitability_score}%**. \n\nHow can I assist you with planting preparations or crop management suggestions?`
+          content: `Hello! I have completed the suitability report for growing **${result.crop_display_name || cropName}** on your **${finalSoil}** land in **${result.region_name || 'your region'}**. The analysis suggests it is **${result.suitable}** with a compatibility rating of **${result.suitability_score}/100**. \n\nHow can I assist you with planting preparations or crop management suggestions?`
         }
       ]);
     } catch (err) {
@@ -581,7 +602,15 @@ export default function TryNewCrop() {
                   }`}>
                     {analysisResult.suitable}
                   </span>
-                  <p className="text-xs text-emerald-400/60 mt-2 font-medium">For typed crop: <span className="text-emerald-200">**{cropName}**</span></p>
+                  <p className="text-xs text-emerald-400/60 mt-2 font-medium">Crop: <span className="text-emerald-200 font-bold">{analysisResult.crop_display_name || cropName}</span></p>
+                  {analysisResult.region_name && (
+                    <p className="text-xs text-emerald-400/50 font-medium">Region: <span className="text-emerald-300">{analysisResult.region_name}</span></p>
+                  )}
+                  {analysisResult.data_source === 'knowledge_base' && (
+                    <span className="inline-flex items-center gap-1 text-[10px] text-green-400/80 bg-green-500/10 border border-green-500/20 px-2 py-0.5 rounded-full mt-1">
+                      <Info className="w-2.5 h-2.5" /> Verified Knowledge Base
+                    </span>
+                  )}
                 </div>
               </div>
 
@@ -627,6 +656,66 @@ export default function TryNewCrop() {
                 </div>
               </div>
             </div>
+
+            {/* Sub-scores Breakdown Panel — NEW */}
+            {analysisResult.sub_scores && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl"
+              >
+                <h3 className="text-lg font-bold text-white flex items-center gap-3 mb-5">
+                  <div className="bg-blue-500/20 p-1.5 rounded-lg border border-blue-500/30"><BarChart3 className="w-5 h-5 text-blue-400" /></div>
+                  Factor-by-Factor Score Breakdown
+                </h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {Object.entries(analysisResult.sub_scores).map(([factor, data]) => {
+                    const factorLabels = { temperature: '🌡️ Temperature', soil: '🪨 Soil', rainfall: '🌧️ Rainfall', season: '📅 Season' };
+                    const pct = (data.score / 25) * 100;
+                    const barColor = pct >= 80 ? 'bg-green-400' : pct >= 52 ? 'bg-amber-400' : 'bg-red-400';
+                    const statusColor = data.status === 'excellent' ? 'text-green-300' : data.status === 'good' ? 'text-blue-300' : data.status === 'moderate' ? 'text-amber-300' : data.status === 'poor' ? 'text-orange-400' : 'text-red-400';
+                    return (
+                      <div key={factor} className="bg-emerald-900/30 border border-emerald-700/30 rounded-2xl p-4 space-y-2">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-emerald-100">{factorLabels[factor] || factor}</span>
+                          <span className={`text-xs font-bold uppercase ${statusColor}`}>{data.status}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <div className="flex-1 h-2 bg-emerald-900/60 rounded-full overflow-hidden">
+                            <motion.div
+                              initial={{ width: 0 }}
+                              animate={{ width: `${pct}%` }}
+                              transition={{ duration: 0.8, ease: 'easeOut', delay: 0.1 }}
+                              className={`h-full ${barColor} rounded-full shadow-[0_0_8px_rgba(74,222,128,0.3)]`}
+                            />
+                          </div>
+                          <span className="text-xs font-bold text-white w-8 text-right">{data.score}/25</span>
+                        </div>
+                        <p className="text-[10px] text-emerald-300/60 leading-relaxed line-clamp-3">{data.reason}</p>
+                      </div>
+                    );
+                  })}
+                </div>
+              </motion.div>
+            )}
+
+            {/* Image Analysis Result — shown only when image was sent */}
+            {analysisResult.image_analysis && (
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3 }}
+                className="bg-blue-950/30 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/20 shadow-2xl"
+              >
+                <h3 className="text-lg font-bold text-white flex items-center gap-3 mb-3">
+                  <div className="bg-blue-500/20 p-1.5 rounded-lg border border-blue-500/30"><Eye className="w-5 h-5 text-blue-300" /></div>
+                  AI Field Image Analysis
+                  <span className="text-xs text-blue-300/60 font-semibold bg-blue-900/30 border border-blue-700/30 px-2 py-0.5 rounded-full ml-auto">Vision Model</span>
+                </h3>
+                <p className="text-sm text-blue-100/80 leading-relaxed border-l-2 border-blue-500/40 pl-4">{analysisResult.image_analysis}</p>
+              </motion.div>
+            )}
 
             {/* Recommendations & Warnings Lists */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
