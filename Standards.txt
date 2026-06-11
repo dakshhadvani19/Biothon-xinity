@@ -9,3 +9,11 @@ the one which can satify all condition that i said .
 tailwind css wherever fit those perfectly and try to build UI with good professional 
 animation , proper structure , consistent padding and spacing , optimize the use of 
 heavy css also , make it responsive for all devices also . 
+
+4 -> Always use proper state management and try to avoid prop drilling as much as possible
+
+5 -> Before editing any code first understand in which places this will impact so u can fix issue everywhere where 
+it can come from current code update
+
+6 -> Don't try to make my website AI wrapper which is simply using AI API for logic but also use current data that we have 
+on our website for more better features
