@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sprout, MapPin, Thermometer, Cloud, CheckCircle2, 
-  AlertTriangle, UploadCloud, Send, MessageSquare, 
+  AlertTriangle, Send, MessageSquare, 
   Calendar, RefreshCw, Sparkles, BookOpen,
   BarChart3, Eye, Info
 } from 'lucide-react';
@@ -15,9 +15,6 @@ export default function TryNewCrop() {
   const [cropName, setCropName] = useState('');
   const [soilType, setSoilType] = useState('Black Soil');
   const [customSoil, setCustomSoil] = useState('');
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
-  const fileInputRef = useRef(null);
 
   // Live context (weather and location)
   const [coords, setCoords] = useState(null);
@@ -26,10 +23,8 @@ export default function TryNewCrop() {
 
   // Analysis state
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [isValidating, setIsValidating] = useState(false);
   const [analysisResult, setAnalysisResult] = useState(null);
   const [error, setError] = useState(null);
-  const [validationError, setValidationError] = useState(null); // { detected_as, reason }
 
   // Inline chat state
   const [chatMessages, setChatMessages] = useState([]);
@@ -72,40 +67,6 @@ export default function TryNewCrop() {
     }
   };
 
-  const handleFileChange = (e) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      setImagePreview(URL.createObjectURL(file));
-    }
-  };
-
-  const triggerFileSelect = () => {
-    fileInputRef.current?.click();
-  };
-
-  const readFileAsBase64 = (file) => {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(file);
-    });
-  };
-
   const handleAnalyze = async (e) => {
     e.preventDefault();
     if (!cropName.trim()) {
@@ -114,52 +75,16 @@ export default function TryNewCrop() {
     }
 
     setError(null);
-    setValidationError(null);
     setAnalysisResult(null);
     setChatMessages([]);
 
-    // Step 1: If an image was uploaded, validate it matches the crop name
-    if (selectedFile) {
-      setIsValidating(true);
-      try {
-        const base64 = await readFileAsBase64(selectedFile);
-        const validation = await aiService.validateImageCrop({
-          crop_name: cropName,
-          image: base64,
-        });
-        if (!validation.valid) {
-          setValidationError({
-            detected_as: validation.detected_as,
-            reason: validation.reason,
-          });
-          setIsValidating(false);
-          return;
-        }
-      } catch (err) {
-        console.warn("Image validation failed, proceeding anyway:", err);
-      } finally {
-        setIsValidating(false);
-      }
-    }
-
-    // Step 2: Proceed with actual analysis
+    // Proceed with actual analysis
     setIsAnalyzing(true);
 
     const finalSoil = soilType === 'Other (Specify)' ? customSoil : soilType;
     const finalCoords = coords || { lat: 22.3039, lon: 70.8022 }; // Rajkot fallback
 
     try {
-      // Build payload — send image as raw base64 (no data: prefix) if available
-      let imageBase64 = null;
-      if (selectedFile) {
-        try {
-          const dataUrl = await readFileAsBase64(selectedFile);
-          imageBase64 = dataUrl.split(',')[1]; // strip the "data:image/jpeg;base64," prefix
-        } catch (imgErr) {
-          console.warn('Could not read image as base64:', imgErr);
-        }
-      }
-
       const payload = {
         crop_name: cropName,
         lat: finalCoords.lat,
@@ -167,7 +92,6 @@ export default function TryNewCrop() {
         soil_type: finalSoil,
         current_temp: weatherData?.currentTemp || 0,
         current_condition: weatherData?.condition || 'Unknown',
-        ...(imageBase64 && { image: imageBase64 }),
       };
 
       const result = await aiService.checkCropSuitability(payload);
@@ -286,9 +210,9 @@ export default function TryNewCrop() {
       <section className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl shadow-2xl border border-emerald-500/20 p-8 md:p-10 relative overflow-hidden">
         <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <form onSubmit={handleAnalyze} className="space-y-8 relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          <div className="flex flex-col gap-8 max-w-2xl mx-auto">
             
-            {/* Left Inputs */}
+            {/* Inputs */}
             <div className="space-y-8 relative z-10">
               <div>
                 <label htmlFor="crop-name" className="block text-sm font-bold text-emerald-100 mb-3 tracking-wide">
@@ -343,70 +267,23 @@ export default function TryNewCrop() {
                       placeholder="Specify soil type (e.g., Sandy Silt loam)"
                       className="w-full bg-emerald-900/40 border border-emerald-600/30 rounded-xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-green-400/50 focus:border-green-400 focus:bg-emerald-900/60 transition-all text-sm font-medium text-white placeholder-emerald-400/40"
                     />
-                  </motion.div>
-                )}
+                  </motion.d                )}
               </div>
             </div>
 
-            {/* Right Side: Optional Image Selector */}
-            <div className="flex flex-col justify-between">
-              <div>
-                <span className="block text-sm font-bold text-emerald-100 tracking-wide flex items-center justify-between mb-3">
-                  <span>Plant / Soil Image Selection</span>
-                  <span className="text-xs text-emerald-200/60 font-semibold bg-emerald-900/50 border border-emerald-700/50 px-2.5 py-1 rounded-full backdrop-blur-sm">Optional</span>
-                </span>
-                
-                <div 
-                  onDragOver={handleDragOver}
-                  onDrop={handleDrop}
-                  onClick={triggerFileSelect}
-                  className="border-2 border-dashed border-emerald-700/50 hover:border-green-400/70 hover:bg-emerald-800/30 bg-emerald-900/20 rounded-2xl p-8 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[220px] group"
-                >
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    ref={fileInputRef} 
-                    onChange={handleFileChange} 
-                    className="hidden" 
-                  />
-                  {imagePreview ? (
-                    <div className="relative group/img rounded-xl overflow-hidden max-h-[190px] w-full shadow-lg border border-emerald-500/20">
-                      <img src={imagePreview} alt="Crop preview" className="w-full h-full object-cover rounded-xl" />
-                      <div className="absolute inset-0 bg-black/60 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center text-white font-semibold text-sm backdrop-blur-sm">
-                        Change Image
-                      </div>
-                    </div>
-                  ) : (
-                    <>
-                      <div className="bg-emerald-900/60 p-4 rounded-full text-emerald-400/70 group-hover:text-green-400 group-hover:bg-green-500/10 transition-all mb-4 border border-emerald-700/50 group-hover:border-green-500/30">
-                        <UploadCloud className="w-8 h-8" />
-                      </div>
-                      <h4 className="text-sm font-bold text-emerald-100 mb-2">Drag & Drop Image</h4>
-                      <p className="text-xs text-emerald-300/60 max-w-[220px] mx-auto leading-relaxed">
-                        Upload a photo of the soil or plant type to help target the description.
-                      </p>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Submit Button */}
+            {/* Submit Button */}
+            <div className="relative z-10">
               <motion.button
                 whileHover={{ scale: 1.02, boxShadow: "0 0 35px rgba(52,211,153,0.5)" }}
                 whileTap={{ scale: 0.97 }}
                 transition={{ type: "spring", stiffness: 400, damping: 25 }}
                 type="submit"
-                disabled={isAnalyzing || isValidating}
-                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-lg py-4.5 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50 mt-8 flex items-center justify-center gap-3 border border-green-400/40 relative overflow-hidden group"
+                disabled={isAnalyzing}
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-500 text-white font-extrabold text-lg py-4 px-6 rounded-2xl shadow-[0_0_20px_rgba(34,197,94,0.3)] disabled:opacity-50 mt-4 flex items-center justify-center gap-3 border border-green-400/40 relative overflow-hidden group"
               >
                 {/* Premium shine effect */}
                 <div className="absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent transform skew-x-[-20deg] group-hover:left-[200%] transition-all duration-1000 ease-in-out pointer-events-none" />
-                {isValidating ? (
-                  <>
-                    <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
-                    <span className="relative z-10">Verifying Image Match...</span>
-                  </>
-                ) : isAnalyzing ? (
+                {isAnalyzing ? (
                   <>
                     <RefreshCw className="w-5 h-5 animate-spin relative z-10" />
                     <span className="relative z-10">Crunching Climate Telemetry...</span>
@@ -423,62 +300,11 @@ export default function TryNewCrop() {
         </form>
 
         {error && (
-          <div className="mt-6 bg-red-900/40 border border-red-500/50 text-red-200 rounded-2xl p-4 text-sm font-semibold flex items-center gap-3 backdrop-blur-sm shadow-lg">
+          <div className="mt-6 bg-red-900/40 border border-red-500/50 text-red-200 rounded-2xl p-4 text-sm font-semibold flex items-center gap-3 backdrop-blur-sm shadow-lg max-w-2xl mx-auto">
             <AlertTriangle className="w-5 h-5 shrink-0 text-red-400" />
             {error}
           </div>
         )}
-
-        {/* Image-Crop Mismatch Validation Error */}
-        <AnimatePresence>
-          {validationError && (
-            <motion.div
-              initial={{ opacity: 0, y: 16, scale: 0.96 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.96 }}
-              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
-              className="mt-6 relative overflow-hidden rounded-3xl border border-orange-500/40 bg-gradient-to-br from-orange-950/60 to-red-950/50 backdrop-blur-xl shadow-2xl p-6"
-            >
-              {/* Decorative glow */}
-              <div className="absolute -top-10 -right-10 w-48 h-48 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-              <div className="flex items-start gap-4">
-                <div className="bg-orange-500/20 border border-orange-400/40 p-3 rounded-2xl shrink-0 shadow-inner">
-                  <AlertTriangle className="w-7 h-7 text-orange-400" />
-                </div>
-                <div className="space-y-2 flex-1">
-                  <h3 className="text-lg font-extrabold text-orange-100 tracking-tight">Image Mismatch Detected 🚫</h3>
-                  <p className="text-sm text-orange-200/80 leading-relaxed">
-                    You entered <span className="font-bold text-white bg-orange-500/30 px-2 py-0.5 rounded-lg">{cropName}</span>,
-                    but the image appears to show a{' '}
-                    <span className="font-bold text-white bg-red-500/30 px-2 py-0.5 rounded-lg">{validationError.detected_as}</span>.
-                  </p>
-                  {validationError.reason && (
-                    <p className="text-xs text-orange-300/70 leading-relaxed border-l-2 border-orange-500/40 pl-3 mt-1">{validationError.reason}</p>
-                  )}
-                  <div className="mt-4 bg-emerald-950/40 border border-emerald-700/40 rounded-2xl p-3 text-xs text-emerald-200/80 leading-relaxed">
-                    <span className="font-bold text-emerald-300">💡 What to do: </span>
-                    Upload a clear photo of a <span className="font-bold text-white">{cropName}</span> plant, leaf, fruit, or seed —
-                    or remove the image to analyze by crop name only.
-                  </div>
-                  <div className="flex gap-3 mt-4">
-                    <button
-                      onClick={() => { setValidationError(null); setSelectedFile(null); setImagePreview(null); }}
-                      className="flex-1 bg-emerald-900/50 hover:bg-emerald-800/70 border border-emerald-600/40 text-emerald-100 font-bold text-sm py-2.5 rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      Remove Image & Retry
-                    </button>
-                    <button
-                      onClick={() => { setValidationError(null); }}
-                      className="flex-1 bg-orange-500/20 hover:bg-orange-500/30 border border-orange-400/40 text-orange-100 font-bold text-sm py-2.5 rounded-xl transition-all active:scale-[0.98]"
-                    >
-                      Upload Correct Image
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </section>
 
       {/* Analysis Results Display */}
@@ -675,22 +501,7 @@ export default function TryNewCrop() {
               </motion.div>
             )}
 
-            {/* Image Analysis Result — shown only when image was sent */}
-            {analysisResult.image_analysis && (
-              <motion.div
-                initial={{ opacity: 0, y: 12 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3 }}
-                className="bg-blue-950/30 backdrop-blur-xl rounded-3xl p-6 border border-blue-500/20 shadow-2xl"
-              >
-                <h3 className="text-lg font-bold text-white flex items-center gap-3 mb-3">
-                  <div className="bg-blue-500/20 p-1.5 rounded-lg border border-blue-500/30"><Eye className="w-5 h-5 text-blue-300" /></div>
-                  AI Field Image Analysis
-                  <span className="text-xs text-blue-300/60 font-semibold bg-blue-900/30 border border-blue-700/30 px-2 py-0.5 rounded-full ml-auto">Vision Model</span>
-                </h3>
-                <p className="text-sm text-blue-100/80 leading-relaxed border-l-2 border-blue-500/40 pl-4">{analysisResult.image_analysis}</p>
-              </motion.div>
-            )}
+            {/* Removed Image Analysis Result box */}
 
             {/* Recommendations & Warnings Lists */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
