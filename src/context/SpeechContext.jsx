@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useRef, useCallback, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+import { replaceNumbersWithHindi } from '../utils/hindiNumbers';
 
 const SpeechContext = createContext(null);
 
@@ -47,7 +48,10 @@ export function SpeechProvider({ children }) {
     // Stop any existing speech
     window.speechSynthesis.cancel();
 
-    const utterance = new SpeechSynthesisUtterance(text);
+    // Convert Arabic digits to Hindi words for correct pronunciation
+    const spokenText = replaceNumbersWithHindi(text);
+
+    const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.lang = 'hi-IN';
     utterance.rate = 0.88;
     utterance.pitch = 1.0;

@@ -1,6 +1,7 @@
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Volume2, Square, RefreshCw, AlertCircle, Loader2 } from 'lucide-react';
+import { replaceNumbersWithHindi } from '../utils/hindiNumbers';
 
 /**
  * HindiVoicePlayer
@@ -53,7 +54,10 @@ export default function HindiVoicePlayer({ hindiText, label = 'हिंदी �
 
     clearTimeout(timeoutRef.current);
 
-    const utterance = new SpeechSynthesisUtterance(hindiText);
+    // Convert all Arabic digits to Hindi words before speaking
+    const spokenText = replaceNumbersWithHindi(hindiText);
+
+    const utterance = new SpeechSynthesisUtterance(spokenText);
     utterance.voice = hindiVoice;
     utterance.lang = 'hi-IN';
     utterance.rate = 0.88;
