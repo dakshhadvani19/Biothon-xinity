@@ -29,11 +29,10 @@ export const diagnosticService = {
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.logsCollectionId,
                 [
-                    Query.equal('user_id', userId),
-                    Query.orderDesc('timestamp')
+                    Query.equal('user_id', userId)
                 ]
             );
-            return response.documents;
+            return response.documents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         } catch (error) {
             console.error("[DiagnosticService] 🚨 DB Error: Fetch Logs", error);
             return [];

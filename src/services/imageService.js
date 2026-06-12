@@ -1,10 +1,19 @@
 import { storage, databases, APPWRITE_CONFIG } from '../api/appwrite';
 import { ID, Query, Permission, Role } from 'appwrite';
 
-// Helper: always returns a guaranteed string URL from a file_id
+// Hardcoded fallbacks so the service works even if .env vars are not loaded
+const DB_ID     = APPWRITE_CONFIG.databaseId          || '6a1d47b3002eaafca63b';
+const COL_ID    = APPWRITE_CONFIG.userImagesCollectionId || 'userimages';
+const BUCKET_ID = APPWRITE_CONFIG.imagesBucketId      || '6a1d4761001a437b2e02';
+
+// Helper: build a preview URL from a file_id
 const buildViewUrl = (fileId) => {
-    const url = storage.getFileView(APPWRITE_CONFIG.imagesBucketId, fileId);
-    return url ? url.toString() : null;
+    try {
+        const url = storage.getFilePreview(BUCKET_ID, fileId, 800, 800);
+        return url ? url.toString() : null;
+    } catch {
+        return null;
+    }
 };
 
 /**
@@ -31,57 +40,36 @@ export const imageService = {
         const fileId = await computeFileHash(file);
         try {
             // Check if this exact file already exists in Storage
-            const existing = await storage.getFile(APPWRITE_CONFIG.imagesBucketId, fileId);
+            const existing = await storage.getFile(BUCKET_ID, fileId);
             console.log(`[ImageService] ♻️ Duplicate detected — reusing existing file: ${fileId}`);
             return existing;
         } catch {
             // File doesn't exist yet — upload it fresh
-            return await storage.createFile(
-                APPWRITE_CONFIG.imagesBucketId,
-                fileId,
-                file
-            );
+            return await storage.createFile(BUCKET_ID, fileId, file);
         }
     },
 
-    getImageViewUrl: (fileId) => {
-        try {
-            return buildViewUrl(fileId);
-        } catch (error) {
-            console.error("[ImageService] 🚨 Storage Error: Get Image URL", error);
-            return null;
-        }
-    },
+    getImageViewUrl: (fileId) => buildViewUrl(fileId),
 
     deleteCropImage: async (fileId) => {
         try {
-            await storage.deleteFile(APPWRITE_CONFIG.imagesBucketId, fileId);
+            await storage.deleteFile(BUCKET_ID, fileId);
             return true;
         } catch (error) {
-            console.error("[ImageService] 🚨 Storage Error: Delete Image", error);
+            console.error('[ImageService] 🚨 Storage Error: Delete Image', error);
             throw error;
         }
     },
 
+    /**
+     * Saves a record linking userId → fileId in the userimages collection.
+     * Silently skips if the record already exists.
+     */
     saveUserImageRecord: async (userId, fileId) => {
-        if (!APPWRITE_CONFIG.userImagesCollectionId) return; // Guard: skip if not configured
         try {
-            // Check if a record for this file_id already exists for this user
-            const existing = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.userImagesCollectionId,
-                [Query.equal('user_id', userId), Query.equal('file_id', fileId), Query.limit(1)]
-            );
-            if (existing.documents.length > 0) {
-                console.log(`[ImageService] ♻️ DB record already exists for file: ${fileId}`);
-                return true; // Already registered, skip
-            }
-
-            // Explicitly set permissions so this user can read/write their own document
-            // Required when Appwrite "Document Security" is enabled on the collection
             await databases.createDocument(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.userImagesCollectionId,
+                DB_ID,
+                COL_ID,
                 ID.unique(),
                 { user_id: userId, file_id: fileId },
                 [
@@ -93,39 +81,38 @@ export const imageService = {
             console.log(`[ImageService] ✅ Saved image record for user: ${userId}, file: ${fileId}`);
             return true;
         } catch (error) {
-            console.error("[ImageService] 🚨 DB record save FAILED:", error.message, error);
-            // Re-throw so caller can surface the error if needed
+            // 409 = document already exists — that's fine
+            if (error.code === 409 || error.message?.includes('already exists')) {
+                console.log(`[ImageService] ♻️ DB record already exists for file: ${fileId}`);
+                return true;
+            }
+            console.error('[ImageService] 🚨 DB record save FAILED:', error.message);
             throw error;
         }
     },
 
     /**
-     * Fetches all image records for a user.
-     * Primary: userimages DB (filtered by user_id)
-     * Fallback: all files in the Storage bucket
+     * Fetches all image records for a user from the userimages DB collection.
+     * Returns images sorted newest first.
      */
     getUserImages: async (userId) => {
-        if (!APPWRITE_CONFIG.userImagesCollectionId) {
-            console.warn('[ImageService] userImagesCollectionId is not configured — cannot fetch user images.');
-            return [];
-        }
-
         try {
             const response = await databases.listDocuments(
-                APPWRITE_CONFIG.databaseId,
-                APPWRITE_CONFIG.userImagesCollectionId,
+                DB_ID,
+                COL_ID,
                 [
                     Query.equal('user_id', userId),
-                    Query.orderDesc('$createdAt'),
                     Query.limit(100),
                 ]
             );
-            return response.documents.map(doc => ({
-                $id: doc.$id,
-                file_id: doc.file_id,
-                image_url: buildViewUrl(doc.file_id),
-                createdAt: doc.$createdAt,
-            }));
+            return response.documents
+                .map(doc => ({
+                    $id: doc.$id,
+                    file_id: doc.file_id,
+                    image_url: buildViewUrl(doc.file_id),
+                    createdAt: doc.$createdAt,
+                }))
+                .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
         } catch (err) {
             console.error('[ImageService] 🚨 DB query failed for getUserImages:', err.message);
             return [];
