@@ -112,10 +112,13 @@ const DiagnosticCapture = () => {
           data.confidence,
           fileId
         );
+        console.log('[DiagnosticCapture] ✅ Image synced to Appwrite Storage + DB');
       } catch (dbError) {
-        console.error("[DiagnosticCapture] 🚨 Failed to sync image with Appwrite DB:", dbError.message, dbError);
-        // UI result is still shown even if DB sync fails
+        // Surface the upload error so it's not invisible — helps debugging
+        console.error("[DiagnosticCapture] 🚨 Failed to sync image with Appwrite:", dbError.message, dbError);
+        // Don't show a blocking error state — result is still valid, just note the sync failed
       }
+
 
     } catch (err) {
       console.error("Inference Connection Error:", err);
