@@ -95,42 +95,29 @@ export const imageService = {
      * Fallback: all files in the Storage bucket
      */
     getUserImages: async (userId) => {
-        // Primary: DB query
-        if (APPWRITE_CONFIG.userImagesCollectionId) {
-            try {
-                const response = await databases.listDocuments(
-                    APPWRITE_CONFIG.databaseId,
-                    APPWRITE_CONFIG.userImagesCollectionId,
-                    [
-                        Query.equal('user_id', userId),
-                        Query.orderDesc('$createdAt'),
-                        Query.limit(100),
-                    ]
-                );
-                if (response.documents.length > 0) {
-                    return response.documents.map(doc => ({
-                        $id: doc.$id,
-                        file_id: doc.file_id,
-                        image_url: buildViewUrl(doc.file_id),
-                        createdAt: doc.$createdAt,
-                    }));
-                }
-            } catch (err) {
-                console.warn("[ImageService] ⚠️ DB query failed, falling back to Storage:", err.message);
-            }
+        if (!APPWRITE_CONFIG.userImagesCollectionId) {
+            console.warn('[ImageService] userImagesCollectionId is not configured — cannot fetch user images.');
+            return [];
         }
 
-        // Fallback: list all bucket files
         try {
-            const files = await storage.listFiles(APPWRITE_CONFIG.imagesBucketId);
-            return (files.files ?? []).map(f => ({
-                $id: f.$id,
-                file_id: f.$id,
-                image_url: buildViewUrl(f.$id),
-                createdAt: f.$createdAt,
+            const response = await databases.listDocuments(
+                APPWRITE_CONFIG.databaseId,
+                APPWRITE_CONFIG.userImagesCollectionId,
+                [
+                    Query.equal('user_id', userId),
+                    Query.orderDesc('$createdAt'),
+                    Query.limit(100),
+                ]
+            );
+            return response.documents.map(doc => ({
+                $id: doc.$id,
+                file_id: doc.file_id,
+                image_url: buildViewUrl(doc.file_id),
+                createdAt: doc.$createdAt,
             }));
         } catch (err) {
-            console.error("[ImageService] 🚨 Storage list also failed:", err.message);
+            console.error('[ImageService] 🚨 DB query failed for getUserImages:', err.message);
             return [];
         }
     },
