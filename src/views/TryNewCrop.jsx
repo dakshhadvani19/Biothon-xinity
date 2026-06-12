@@ -3,15 +3,14 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Sprout, MapPin, Thermometer, Cloud, CheckCircle2, 
   AlertTriangle, UploadCloud, Send, MessageSquare, 
-  Calendar, RefreshCw, Sparkles, BookOpen, Volume2,
+  Calendar, RefreshCw, Sparkles, BookOpen,
   BarChart3, Eye, Info
 } from 'lucide-react';
 import { getFarmerCoordinates, getSmartWeatherUpdates } from '../services/weatherService';
 import { aiService } from '../services/aiService';
-import { useSpeech } from '../context/SpeechContext';
+import HindiVoicePlayer from '../components/HindiVoicePlayer';
 
 export default function TryNewCrop() {
-  const { speak } = useSpeech();
   // Form inputs
   const [cropName, setCropName] = useState('');
   const [soilType, setSoilType] = useState('Black Soil');
@@ -197,28 +196,7 @@ export default function TryNewCrop() {
     }
   };
 
-  // Builds a rich Hindi narration script from the analysis result
-  const buildHindiSummary = (result, crop) => {
-    if (!result) return '';
-    const score = result.suitability_score;
-    const suitable = result.suitable;
-    const recs = (result.recommendations || []).join('। ');
-    const precs = (result.precautions || []).join('। ');
-    const weather = result.weather_analysis || '';
-    const soil = result.soil_analysis || '';
-    const climate = result.yearly_climate_analysis || '';
-
-    return (
-      `${crop} फसल की उपयुक्तता रिपोर्ट। ` +
-      `कुल अनुकूलता स्कोर: ${score} प्रतिशत। ` +
-      `निर्णय: ${suitable === 'Highly Suitable' ? 'अत्यंत उपयुक्त' : suitable === 'Moderately Suitable' ? 'मध्यम उपयुक्त' : 'अनुपयुक्त'}। ` +
-      `वायुमंडलीय विश्लेषण: ${weather} ` +
-      `मिट्टी विश्लेषण: ${soil} ` +
-      `वार्षिक जलवायु विश्लेषण: ${climate} ` +
-      `कृषि सिफारिशें: ${recs}। ` +
-      `आवश्यक सावधानियाँ: ${precs}।`
-    );
-  };
+  // buildHindiSummary removed — HindiVoicePlayer now uses backend hindi_narration directly
 
   const handleSendChat = async (e) => {
     e.preventDefault();
@@ -540,15 +518,12 @@ export default function TryNewCrop() {
             animate={{ opacity: 1, y: 0 }}
             className="space-y-8 relative z-10"
           >
-            {/* Hindi Voice Button - top of the whole report */}
+            {/* Hindi Voice Player - full report mode */}
             <div className="flex justify-end">
-              <button
-                onClick={() => speak(analysisResult.hindi_narration || `${cropName} फसल की उपयुक्तता रिपोर्ट। अनुकूलता स्कोर ${analysisResult.suitability_score} प्रतिशत है।`, `${cropName} - उपयुक्तता रिपोर्ट`)}
-                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-900/40 hover:bg-emerald-800/60 text-emerald-100 font-bold text-sm rounded-xl border border-emerald-600/40 transition-all active:scale-95 shadow-lg backdrop-blur-md"
-              >
-                <Volume2 className="w-4 h-4 text-emerald-400" />
-                पूरी रिपोर्ट हिंदी में सुनें
-              </button>
+              <HindiVoicePlayer
+                hindiText={analysisResult.hindi_narration}
+                label={`${analysisResult.crop_display_name || cropName} - उपयुक्तता रिपोर्ट`}
+              />
             </div>
             <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl grid grid-cols-1 md:grid-cols-3 gap-8 relative overflow-hidden">
               <div className="absolute top-1/2 left-1/4 w-64 h-64 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 pointer-events-none" />
@@ -783,13 +758,11 @@ export default function TryNewCrop() {
                     >
                       {msg.content}
                       {msg.role === 'assistant' && msg.content_hi && (
-                        <button
-                          onClick={() => speak(msg.content_hi, 'AI सलाह')}
-                          className="mt-3 flex items-center gap-1.5 text-xs font-bold text-emerald-300 hover:text-emerald-100 hover:bg-emerald-800/80 px-3 py-1.5 rounded-lg transition-all active:scale-95 border border-emerald-600/40"
-                        >
-                          <Volume2 className="w-3.5 h-3.5" />
-                          हिंदी में सुनें
-                        </button>
+                        <HindiVoicePlayer
+                          hindiText={msg.content_hi}
+                          label="AI सलाह"
+                          compact
+                        />
                       )}
                     </div>
                   </div>

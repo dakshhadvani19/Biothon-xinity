@@ -9,8 +9,23 @@ export function SpeechProvider({ children }) {
   const [isPaused, setIsPaused] = useState(false);
   const [currentText, setCurrentText] = useState('');
   const [currentLabel, setCurrentLabel] = useState('');
+  const [isHindiAvailable, setIsHindiAvailable] = useState(false);
   const utteranceRef = useRef(null);
   const location = useLocation();
+
+  // Detect Hindi voice availability on mount and whenever voices list changes
+  useEffect(() => {
+    const checkHindi = () => {
+      const voices = window.speechSynthesis.getVoices();
+      const found = voices.some(v => v.lang === 'hi-IN' || v.lang === 'hi' || v.lang.startsWith('hi'));
+      setIsHindiAvailable(found);
+    };
+    checkHindi();
+    window.speechSynthesis.onvoiceschanged = checkHindi;
+    return () => {
+      window.speechSynthesis.onvoiceschanged = null;
+    };
+  }, []);
 
   // Stop speech whenever the route changes
   useEffect(() => {
@@ -71,7 +86,6 @@ export function SpeechProvider({ children }) {
 
     const voices = window.speechSynthesis.getVoices();
     if (voices.length > 0) {
-      // Voices already loaded
       assignVoiceAndSpeak();
     } else {
       // Wait for voices to load (first time on Chrome/Edge)
@@ -109,6 +123,7 @@ export function SpeechProvider({ children }) {
       isPaused,
       currentText,
       currentLabel,
+      isHindiAvailable,
     }}>
       {children}
     </SpeechContext.Provider>
