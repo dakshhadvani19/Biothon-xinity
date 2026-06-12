@@ -267,7 +267,8 @@ export default function TryNewCrop() {
                       placeholder="Specify soil type (e.g., Sandy Silt loam)"
                       className="w-full bg-emerald-900/40 border border-emerald-600/30 rounded-xl px-5 py-3.5 outline-none focus:ring-2 focus:ring-green-400/50 focus:border-green-400 focus:bg-emerald-900/60 transition-all text-sm font-medium text-white placeholder-emerald-400/40"
                     />
-                  </motion.d                )}
+                  </motion.div>
+                )}
               </div>
             </div>
 
