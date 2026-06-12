@@ -1,5 +1,5 @@
 import { storage, databases, APPWRITE_CONFIG } from '../api/appwrite';
-import { ID, Query } from 'appwrite';
+import { ID, Query, Permission, Role } from 'appwrite';
 
 // Helper: always returns a guaranteed string URL from a file_id
 const buildViewUrl = (fileId) => {
@@ -76,16 +76,26 @@ export const imageService = {
                 console.log(`[ImageService] ♻️ DB record already exists for file: ${fileId}`);
                 return true; // Already registered, skip
             }
+
+            // Explicitly set permissions so this user can read/write their own document
+            // Required when Appwrite "Document Security" is enabled on the collection
             await databases.createDocument(
                 APPWRITE_CONFIG.databaseId,
                 APPWRITE_CONFIG.userImagesCollectionId,
                 ID.unique(),
-                { user_id: userId, file_id: fileId }
+                { user_id: userId, file_id: fileId },
+                [
+                    Permission.read(Role.user(userId)),
+                    Permission.write(Role.user(userId)),
+                    Permission.delete(Role.user(userId)),
+                ]
             );
+            console.log(`[ImageService] ✅ Saved image record for user: ${userId}, file: ${fileId}`);
             return true;
         } catch (error) {
-            console.warn("[ImageService] ⚠️ DB record save failed (non-critical):", error.message);
-            // Non-blocking — images are in Storage regardless
+            console.error("[ImageService] 🚨 DB record save FAILED:", error.message, error);
+            // Re-throw so caller can surface the error if needed
+            throw error;
         }
     },
 

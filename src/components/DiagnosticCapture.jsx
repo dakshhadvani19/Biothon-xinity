@@ -113,8 +113,8 @@ const DiagnosticCapture = () => {
           fileId
         );
       } catch (dbError) {
-        console.error("Failed to sync with Appwrite:", dbError);
-        // We don't block the UI result if DB tracking fails, we just log it.
+        console.error("[DiagnosticCapture] 🚨 Failed to sync image with Appwrite DB:", dbError.message, dbError);
+        // UI result is still shown even if DB sync fails
       }
 
     } catch (err) {

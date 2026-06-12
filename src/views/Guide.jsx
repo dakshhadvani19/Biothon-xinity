@@ -240,13 +240,22 @@ export default function Guide() {
   const openGallery = async () => {
     setView('gallery');
     setFetchingImages(true);
-    const [imgs, logs] = await Promise.all([
-      imageService.getUserImages(user.$id),
-      diagnosticService.getUserDiagnosticLogs(user.$id),
-    ]);
-    setImages(imgs);
-    setDiagLogs(logs);
-    setFetchingImages(false);
+    setError(null);
+    try {
+      const [imgs, logs] = await Promise.all([
+        imageService.getUserImages(user.$id),
+        diagnosticService.getUserDiagnosticLogs(user.$id),
+      ]);
+      setImages(imgs);
+      setDiagLogs(logs);
+    } catch (err) {
+      console.error('[Guide] Failed to load gallery:', err);
+      setError(`Failed to load your scans: ${err.message}`);
+      setImages([]);
+      setDiagLogs([]);
+    } finally {
+      setFetchingImages(false);
+    }
   };
 
   const openFarmGallery = async () => {
@@ -518,8 +527,14 @@ export default function Guide() {
             </div>
             <div>
               <p className="font-bold text-gray-600">No crop scans found</p>
-              <p className="text-sm text-gray-400 mt-1">Use the Diagnostic tab to scan a leaf first.</p>
+              <p className="text-sm text-gray-400 mt-1">Go to the <span className="font-semibold text-green-600">Diagnostic</span> tab, scan a leaf, and come back here.</p>
             </div>
+            <button
+              onClick={openGallery}
+              className="flex items-center gap-2 text-sm text-green-700 font-semibold bg-green-50 hover:bg-green-100 border border-green-200 px-4 py-2 rounded-xl transition-colors"
+            >
+              <RotateCcw className="w-4 h-4" /> Refresh
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2">
