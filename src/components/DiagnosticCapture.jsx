@@ -98,7 +98,7 @@ const DiagnosticCapture = () => {
 
       // 2. Upload to Appwrite Storage & Sync to UserImages DB
       try {
-        const uploadedFile = await imageService.uploadCropImage(selectedFile);
+        const uploadedFile = await imageService.uploadCropImage(selectedFile, user.$id);
         const fileId = uploadedFile.$id;
         
         // Save to UserImages table (URL is generated fresh from file_id — no need to store it)

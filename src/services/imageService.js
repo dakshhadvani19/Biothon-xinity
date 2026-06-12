@@ -6,14 +6,14 @@ const DB_ID     = APPWRITE_CONFIG.databaseId          || '6a1d47b3002eaafca63b';
 const COL_ID    = APPWRITE_CONFIG.userImagesCollectionId || 'userimages';
 const BUCKET_ID = APPWRITE_CONFIG.imagesBucketId      || '6a1d4761001a437b2e02';
 
-// Helper: build a preview URL from a file_id
+// Build a direct Appwrite preview URL — reliable even when SDK state is stale
+const ENDPOINT = 'https://sgp.cloud.appwrite.io/v1';
+const PROJECT_ID = '6a1d47300008fc65d5c1';
+
 const buildViewUrl = (fileId) => {
-    try {
-        const url = storage.getFilePreview(BUCKET_ID, fileId, 800, 800);
-        return url ? url.toString() : null;
-    } catch {
-        return null;
-    }
+    if (!fileId) return null;
+    // Direct URL construction — no SDK call needed, always works
+    return `${ENDPOINT}/storage/buckets/${BUCKET_ID}/files/${fileId}/preview?width=800&height=800&project=${PROJECT_ID}`;
 };
 
 /**
@@ -35,8 +35,9 @@ export const imageService = {
      * Uploads a file to Appwrite Storage using its SHA-256 hash as the file ID.
      * If the same image was already uploaded, Appwrite returns the existing file
      * without re-uploading it — zero duplicates.
+     * Files are given read("any") so preview URLs work without auth headers.
      */
-    uploadCropImage: async (file) => {
+    uploadCropImage: async (file, userId) => {
         const fileId = await computeFileHash(file);
         try {
             // Check if this exact file already exists in Storage
@@ -44,8 +45,15 @@ export const imageService = {
             console.log(`[ImageService] ♻️ Duplicate detected — reusing existing file: ${fileId}`);
             return existing;
         } catch {
-            // File doesn't exist yet — upload it fresh
-            return await storage.createFile(BUCKET_ID, fileId, file);
+            // File doesn't exist yet — upload it with correct permissions
+            const permissions = [
+                Permission.read(Role.any()),       // public read → preview URLs work
+                ...(userId ? [
+                    Permission.update(Role.user(userId)),
+                    Permission.delete(Role.user(userId)),
+                ] : []),
+            ];
+            return await storage.createFile(BUCKET_ID, fileId, file, permissions);
         }
     },
 
