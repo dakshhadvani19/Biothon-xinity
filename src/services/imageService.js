@@ -2,9 +2,9 @@ import { storage, databases, APPWRITE_CONFIG } from '../api/appwrite';
 import { ID, Query, Permission, Role } from 'appwrite';
 
 // Hardcoded fallbacks so the service works even if .env vars are not loaded
-const DB_ID     = APPWRITE_CONFIG.databaseId             || '6a1d47b3002eaafca63b';
-const COL_ID    = APPWRITE_CONFIG.userImagesCollectionId || 'userimages';
-const BUCKET_ID = APPWRITE_CONFIG.imagesBucketId         || '6a1d4761001a437b2e02';
+const DB_ID = APPWRITE_CONFIG.databaseId || '6a1d47b3002eaafca63b';
+const COL_ID = APPWRITE_CONFIG.userImagesCollectionId || 'userimages';
+const BUCKET_ID = APPWRITE_CONFIG.imagesBucketId || '6a1d4761001a437b2e02';
 
 /**
  * Generates a preview URL using the Appwrite SDK.

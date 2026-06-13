@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Sprout, MapPin, Thermometer, Cloud, CheckCircle2, 
-  AlertTriangle, Send, MessageSquare, 
+import {
+  Sprout, MapPin, Thermometer, Cloud, CheckCircle2,
+  AlertTriangle, Send, MessageSquare,
   Calendar, RefreshCw, Sparkles, BookOpen,
   BarChart3, Eye, Info
 } from 'lucide-react';
@@ -60,7 +60,7 @@ export default function TryNewCrop() {
     try {
       const position = await getFarmerCoordinates();
       setCoords(position);
-      
+
       const weather = await getSmartWeatherUpdates();
       setWeatherData(weather);
     } catch (err) {
@@ -110,7 +110,7 @@ export default function TryNewCrop() {
 
       // Fire-and-forget save to DB — powers the dashboard cards
       if (user) {
-        suitabilityService.saveResult(user.$id, cropName, finalSoil, result).catch(() => {});
+        suitabilityService.saveResult(user.$id, cropName, finalSoil, result).catch(() => { });
       }
 
       // Initialize inline chat with a greeting
@@ -136,7 +136,7 @@ export default function TryNewCrop() {
 
     const userMessageText = chatInput;
     setChatInput('');
-    
+
     // Add user message locally
     const updatedMessages = [...chatMessages, { role: 'user', content: userMessageText }];
     setChatMessages(updatedMessages);
@@ -155,15 +155,15 @@ export default function TryNewCrop() {
       };
 
       const response = await aiService.sendChatMessage(updatedMessages, chatContext);
-      
+
       const contentEn = response.content_en || response.content || '';
       const contentHi = response.content_hi || '';
       setChatMessages(prev => [...prev, { role: 'assistant', content: contentEn, content_hi: contentHi }]);
     } catch (err) {
       console.error("Chat message error:", err);
-      setChatMessages(prev => [...prev, { 
-        role: 'assistant', 
-        content: "Sorry, I am having trouble connecting to the advisory server. Please check your network." 
+      setChatMessages(prev => [...prev, {
+        role: 'assistant',
+        content: "Sorry, I am having trouble connecting to the advisory server. Please check your network."
       }]);
     } finally {
       setIsSendingChat(false);
@@ -201,8 +201,8 @@ export default function TryNewCrop() {
               ) : (
                 <span className="text-amber-400 font-medium">Rajkot, India (Default)</span>
               )}
-              <button 
-                onClick={syncLocationAndWeather} 
+              <button
+                onClick={syncLocationAndWeather}
                 disabled={isSyncingLocation}
                 className="text-emerald-400/50 hover:text-emerald-300 transition-colors ml-1 p-1 hover:bg-emerald-800/50 rounded-lg"
                 title="Sync Location"
@@ -219,7 +219,7 @@ export default function TryNewCrop() {
         <div className="absolute top-0 right-0 w-96 h-96 bg-green-500/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none" />
         <form onSubmit={handleAnalyze} className="space-y-8 relative z-10">
           <div className="flex flex-col gap-8 max-w-2xl mx-auto">
-            
+
             {/* Inputs */}
             <div className="space-y-8 relative z-10">
               <div>
@@ -250,11 +250,10 @@ export default function TryNewCrop() {
                       key={option}
                       type="button"
                       onClick={() => setSoilType(option)}
-                      className={`py-3.5 px-4 rounded-xl border text-sm font-bold transition-all duration-300 text-center backdrop-blur-sm ${
-                        soilType === option
+                      className={`py-3.5 px-4 rounded-xl border text-sm font-bold transition-all duration-300 text-center backdrop-blur-sm ${soilType === option
                           ? 'border-green-400 bg-green-500/20 text-green-300 shadow-[0_0_15px_rgba(74,222,128,0.15)]'
                           : 'border-emerald-700/50 text-emerald-300/70 hover:border-emerald-500/80 hover:bg-emerald-800/40 hover:text-emerald-200'
-                      }`}
+                        }`}
                     >
                       {option}
                     </button>
@@ -320,13 +319,13 @@ export default function TryNewCrop() {
       <AnimatePresence mode="wait">
         {/* Loading Scanning Animation Overlay */}
         {isAnalyzing && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="bg-emerald-950/40 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-12 shadow-2xl flex flex-col items-center justify-center space-y-6 relative overflow-hidden"
           >
-            <motion.div 
+            <motion.div
               animate={{ y: ['-100%', '100%'] }}
               transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
               className="w-full h-1.5 bg-green-400 shadow-[0_0_20px_rgba(74,222,128,0.8)] absolute top-0 left-0"
@@ -366,34 +365,33 @@ export default function TryNewCrop() {
               <div className="flex flex-col items-center justify-center border-b md:border-b-0 md:border-r border-emerald-800/40 pb-6 md:pb-0 md:pr-8 text-center relative z-10">
                 <div className="relative w-40 h-40 flex items-center justify-center">
                   <svg className="w-full h-full transform -rotate-90 drop-shadow-[0_0_10px_rgba(74,222,128,0.1)]">
-                    <circle 
-                      cx="80" 
-                      cy="80" 
-                      r="65" 
-                      className="text-emerald-900/60" 
-                      strokeWidth="10" 
-                      stroke="currentColor" 
-                      fill="transparent" 
+                    <circle
+                      cx="80"
+                      cy="80"
+                      r="65"
+                      className="text-emerald-900/60"
+                      strokeWidth="10"
+                      stroke="currentColor"
+                      fill="transparent"
                     />
-                    <motion.circle 
-                      cx="80" 
-                      cy="80" 
-                      r="65" 
-                      className={`${ 
-                        analysisResult.suitability_score >= 80 
-                          ? 'text-green-400' 
-                          : analysisResult.suitability_score >= 50 
-                            ? 'text-amber-400' 
+                    <motion.circle
+                      cx="80"
+                      cy="80"
+                      r="65"
+                      className={`${analysisResult.suitability_score >= 80
+                          ? 'text-green-400'
+                          : analysisResult.suitability_score >= 50
+                            ? 'text-amber-400'
                             : 'text-red-400'
-                      }`} 
-                      strokeWidth="10" 
+                        }`}
+                      strokeWidth="10"
                       strokeDasharray="408.4"
                       initial={{ strokeDashoffset: 408.4 }}
                       animate={{ strokeDashoffset: 408.4 - (408.4 * analysisResult.suitability_score) / 100 }}
                       transition={{ duration: 1.2, ease: "easeOut" }}
                       strokeLinecap="round"
-                      stroke="currentColor" 
-                      fill="transparent" 
+                      stroke="currentColor"
+                      fill="transparent"
                     />
                   </svg>
                   <div className="absolute flex flex-col items-center justify-center">
@@ -403,13 +401,12 @@ export default function TryNewCrop() {
                 </div>
 
                 <div className="mt-5 space-y-1">
-                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold shadow-lg backdrop-blur-md ${
-                    analysisResult.suitable === 'Highly Suitable'
+                  <span className={`inline-block px-4 py-1.5 rounded-full text-sm font-bold shadow-lg backdrop-blur-md ${analysisResult.suitable === 'Highly Suitable'
                       ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                       : analysisResult.suitable === 'Moderately Suitable'
                         ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
                         : 'bg-red-500/20 text-red-300 border border-red-500/30'
-                  }`}>
+                    }`}>
                     {analysisResult.suitable}
                   </span>
                   <p className="text-xs text-emerald-400/60 mt-2 font-medium">Crop: <span className="text-emerald-200 font-bold">{analysisResult.crop_display_name || cropName}</span></p>
@@ -565,16 +562,15 @@ export default function TryNewCrop() {
               {/* Chat Message Thread */}
               <div className="h-80 overflow-y-auto p-6 space-y-4 bg-emerald-950/30">
                 {chatMessages.map((msg, idx) => (
-                  <div 
-                    key={idx} 
+                  <div
+                    key={idx}
                     className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
                   >
-                    <div 
-                      className={`max-w-[80%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${
-                        msg.role === 'user' 
-                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-br-none shadow-[0_0_15px_rgba(34,197,94,0.15)] border border-green-400/30' 
+                    <div
+                      className={`max-w-[80%] rounded-2xl px-5 py-3.5 text-sm leading-relaxed ${msg.role === 'user'
+                          ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-br-none shadow-[0_0_15px_rgba(34,197,94,0.15)] border border-green-400/30'
                           : 'bg-emerald-900/60 border border-emerald-700/50 text-emerald-50 rounded-bl-none shadow-lg whitespace-pre-wrap'
-                      }`}
+                        }`}
                     >
                       {msg.content}
                       {msg.role === 'assistant' && msg.content_hi && (

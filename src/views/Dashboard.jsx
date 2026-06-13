@@ -91,7 +91,7 @@ function FieldCard({ card }) {
   const sc = {
     green: { badge: 'text-green-400 bg-green-500/10 border-green-500/20', border: 'border-[#1C2A1C]' },
     amber: { badge: 'text-amber-400 bg-amber-500/10 border-amber-500/20', border: 'border-amber-900/30' },
-    red:   { badge: 'text-red-400 bg-red-500/10 border-red-500/20',       border: 'border-red-900/30' },
+    red: { badge: 'text-red-400 bg-red-500/10 border-red-500/20', border: 'border-red-900/30' },
   }[card.status.color] || { badge: 'text-green-400 bg-green-500/10 border-green-500/20', border: 'border-[#1C2A1C]' };
 
   return (
@@ -130,8 +130,8 @@ function FieldCard({ card }) {
 
       <div className="grid grid-cols-3 gap-2 text-center">
         {[
-          { label: 'TEMP',    value: card.temperature },
-          { label: 'pH',      value: card.pH },
+          { label: 'TEMP', value: card.temperature },
+          { label: 'pH', value: card.pH },
           { label: 'COMPAT.', value: card.compatibility ? card.compatibility.replace(' Suitable', '') : '–', loading: card.loadingCompatibility },
         ].map(({ label, value, loading }) => (
           <div key={label} className="bg-[#111A11] rounded-xl py-2 border border-[#1C2A1C]">
@@ -216,9 +216,9 @@ export default function Dashboard() {
 
   useEffect(() => { loadCards(); }, [loadCards]);
 
-  const threatCards  = cards.filter(c => c.status.color !== 'green');
+  const threatCards = cards.filter(c => c.status.color !== 'green');
   const avgHealthScore = cards.length > 0 ? cards.reduce((sum, c) => sum + c.healthScore, 0) / cards.length : null;
-  const healthPct      = avgHealthScore != null ? Math.round((avgHealthScore / 10) * 100) : null;
+  const healthPct = avgHealthScore != null ? Math.round((avgHealthScore / 10) * 100) : null;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 w-full">
@@ -239,10 +239,10 @@ export default function Dashboard() {
       {/* Top stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: ShieldCheck, iconColor: 'text-green-500', label: 'Field Health',    value: loading ? '—' : healthPct != null ? `${healthPct}% Healthy` : 'No data' },
-          { icon: Beaker,      iconColor: 'text-blue-400',  label: 'Crops Tracked',   value: loading ? '—' : `${cards.length} crop${cards.length !== 1 ? 's' : ''}` },
-          { icon: TrendingUp,  iconColor: 'text-orange-400',label: 'Live Temp',        value: weatherData ? `${weatherData.currentTemp}°C` : '—', highlight: true },
-          { icon: AlertTriangle, iconColor: 'text-red-500', label: 'Active Threats',  value: loading ? '—' : threatCards.length > 0 ? `${threatCards.length} Active` : 'None', valueColor: threatCards.length > 0 ? 'text-red-500' : 'text-white' },
+          { icon: ShieldCheck, iconColor: 'text-green-500', label: 'Field Health', value: loading ? '—' : healthPct != null ? `${healthPct}% Healthy` : 'No data' },
+          { icon: Beaker, iconColor: 'text-blue-400', label: 'Crops Tracked', value: loading ? '—' : `${cards.length} crop${cards.length !== 1 ? 's' : ''}` },
+          { icon: TrendingUp, iconColor: 'text-orange-400', label: 'Live Temp', value: weatherData ? `${weatherData.currentTemp}°C` : '—', highlight: true },
+          { icon: AlertTriangle, iconColor: 'text-red-500', label: 'Active Threats', value: loading ? '—' : threatCards.length > 0 ? `${threatCards.length} Active` : 'None', valueColor: threatCards.length > 0 ? 'text-red-500' : 'text-white' },
         ].map(({ icon: Icon, iconColor, label, value, highlight, valueColor = 'text-white' }) => (
           <div key={label} className={`${highlight ? 'bg-[#111A11] border-green-900/50' : 'bg-[#0D150D] border-[#1C2A1C]'} border rounded-2xl p-5 flex items-center gap-4 shadow-sm relative overflow-hidden`}>
             {highlight && <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />}
@@ -346,9 +346,9 @@ export default function Dashboard() {
               <h2 className="text-lg font-bold text-white mb-3">Get Started</h2>
               <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 space-y-3">
                 {[
-                  { to: '/try-new',          icon: Sprout,   label: 'Check crop suitability', color: 'text-green-400' },
-                  { to: '/diagnostic',       icon: Activity, label: 'Upload a crop image',    color: 'text-blue-400' },
-                  { to: '/nutrient-analysis',icon: Beaker,   label: 'Run nutrition analysis', color: 'text-purple-400' },
+                  { to: '/try-new', icon: Sprout, label: 'Check crop suitability', color: 'text-green-400' },
+                  { to: '/diagnostic', icon: Activity, label: 'Upload a crop image', color: 'text-blue-400' },
+                  { to: '/nutrient-analysis', icon: Beaker, label: 'Run nutrition analysis', color: 'text-purple-400' },
                 ].map(({ to, icon: Icon, label, color }) => (
                   <NavLink key={to} to={to} className="flex items-center gap-3 py-2 hover:opacity-80 transition-opacity">
                     <Icon className={`w-4 h-4 shrink-0 ${color}`} />

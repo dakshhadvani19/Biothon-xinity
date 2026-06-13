@@ -51,7 +51,7 @@ const DiagnosticCapture = () => {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    
+
     // Simulate error handling
     if (file.size > 15 * 1024 * 1024) {
       setErrorState({
@@ -71,7 +71,7 @@ const DiagnosticCapture = () => {
 
   const handleUploadSubmit = async () => {
     if (!selectedFile || !user) return; // Prevent upload if not signed in
-    
+
     setIsLoading(true);
     setErrorState(null);
 
@@ -80,8 +80,8 @@ const DiagnosticCapture = () => {
 
     try {
       // 1. Run ML Prediction
-      const mlApiUrl = import.meta.env.DEV 
-        ? "http://127.0.0.1:8000/api/v1/predict" 
+      const mlApiUrl = import.meta.env.DEV
+        ? "http://127.0.0.1:8000/api/v1/predict"
         : "https://dakshhadvani19-agrishield.hf.space/api/v1/predict";
 
       const response = await fetch(mlApiUrl, {
@@ -100,12 +100,12 @@ const DiagnosticCapture = () => {
       try {
         const uploadedFile = await imageService.uploadCropImage(selectedFile, user.$id);
         const fileId = uploadedFile.$id;
-        
+
         // Save to UserImages table — extract crop name from disease string for dashboard linking
         const cropName = data.disease
           .split('___')[0].replace(/_/g, ' ').replace(/\(.*?\)/g, '').trim();
         await imageService.saveUserImageRecord(user.$id, fileId, cropName);
-        
+
         // Optional: Save to Diagnostic Logs
         await diagnosticService.saveDiagnosticLog(
           user.$id,
@@ -166,7 +166,7 @@ const DiagnosticCapture = () => {
       />
 
       <AnimatePresence mode="wait">
-        
+
         {/* Error State View - Premium Soft */}
         {errorState && (
           <motion.div
@@ -211,15 +211,15 @@ const DiagnosticCapture = () => {
               className="w-full aspect-[4/3] bg-gradient-to-br from-green-50/50 to-emerald-50/50 border-2 border-dashed border-green-200 rounded-3xl flex flex-col items-center justify-center gap-6 transition-all hover:bg-green-50/80 hover:border-green-300 hover:shadow-xl active:scale-[0.98] group relative overflow-hidden backdrop-blur-sm"
             >
               <div className="absolute inset-0 bg-green-400/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              
-              <motion.div 
+
+              <motion.div
                 animate={{ y: [0, -8, 0] }}
                 transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                 className="bg-emerald-900/60 p-6 rounded-full shadow-lg border border-emerald-500/30 group-hover:scale-110 group-hover:bg-emerald-800/80 transition-all duration-300 z-10"
               >
                 <Camera className="w-10 h-10 text-green-400" strokeWidth={2} />
               </motion.div>
-              
+
               <div className="z-10 text-center px-4">
                 <h3 className="text-2xl font-extrabold text-emerald-100 tracking-tight group-hover:text-green-400 group-hover:drop-shadow-[0_0_10px_rgba(74,222,128,0.8)] transition-all duration-300">
                   Tap to Scan
@@ -244,11 +244,11 @@ const DiagnosticCapture = () => {
                 alt="Crop preview"
                 className={`w-full h-full object-cover transition-all duration-500 ${isLoading ? 'scale-105 blur-[2px] opacity-70' : 'opacity-100'}`}
               />
-              
+
               {/* Scanning Overlay Animation */}
               {isLoading && (
                 <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gray-900/40 backdrop-blur-sm">
-                  <motion.div 
+                  <motion.div
                     animate={{ top: ['0%', '100%', '0%'] }}
                     transition={{ repeat: Infinity, duration: 3, ease: "linear" }}
                     className="w-full h-[2px] bg-green-400 absolute shadow-[0_0_15px_rgba(74,222,128,1)]"
@@ -262,23 +262,23 @@ const DiagnosticCapture = () => {
             </div>
 
             {!user ? (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="bg-emerald-950/60 backdrop-blur-xl border border-emerald-500/20 rounded-3xl p-8 shadow-xl text-center relative max-w-sm mx-auto"
               >
-                <motion.div 
+                <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
                   className="absolute -top-5 left-1/2 -translate-x-1/2 bg-pink-100 text-pink-600 font-bold px-5 py-1.5 rounded-full border border-pink-200 shadow-sm"
                 >
                   REQUIRED
                 </motion.div>
-                
+
                 <div className="bg-pink-50 w-20 h-20 rounded-full flex items-center justify-center mx-auto mb-5 shadow-inner border border-pink-100">
                   <Lock className="w-10 h-10 text-pink-500" strokeWidth={2} />
                 </div>
-                
+
                 <h3 className="text-2xl font-extrabold text-emerald-50 tracking-tight mb-2">Unlock AI Analysis</h3>
                 <p className="text-emerald-200/70 font-medium mb-8 text-sm leading-relaxed px-2">
                   Please sign in for a better experience to save your crop scans and track health history.
@@ -307,10 +307,10 @@ const DiagnosticCapture = () => {
                   className="w-full bg-white border-2 border-gray-200 text-emerald-100 font-bold text-lg py-3.5 rounded-2xl flex items-center justify-center gap-3 transition-all hover:shadow-lg hover:-translate-y-0.5 active:translate-y-0 active:shadow-md google-border-hover"
                 >
                   <svg viewBox="0 0 24 24" className="w-6 h-6" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                    <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
+                    <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
+                    <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
+                    <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335" />
                   </svg>
                   Sign in with Google
                 </button>
@@ -324,7 +324,7 @@ const DiagnosticCapture = () => {
                 >
                   Retake
                 </button>
-                
+
                 <button
                   onClick={handleUploadSubmit}
                   disabled={isLoading}
@@ -359,18 +359,18 @@ const DiagnosticCapture = () => {
             className="space-y-6"
           >
             <div className="relative aspect-video bg-gray-100 rounded-3xl shadow-xl border border-gray-200 overflow-hidden ring-4 ring-white">
-               <img src={previewUrl} alt="Analyzed Crop" className="w-full h-full object-cover" />
-               <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
-               <div className="absolute bottom-4 left-4">
-                  <span className="bg-white/90 backdrop-blur-md text-green-700 text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
-                    <CheckCircle2 className="w-4 h-4 text-green-500" /> Scanned Successfully
-                  </span>
-               </div>
+              <img src={previewUrl} alt="Analyzed Crop" className="w-full h-full object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-t from-gray-900/80 via-transparent to-transparent" />
+              <div className="absolute bottom-4 left-4">
+                <span className="bg-white/90 backdrop-blur-md text-green-700 text-xs font-bold px-4 py-2 rounded-full shadow-lg flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-green-500" /> Scanned Successfully
+                </span>
+              </div>
             </div>
 
             <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 shadow-2xl border border-emerald-500/20 space-y-6 relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 via-emerald-500 to-teal-500" />
-              
+
               <div className="flex flex-wrap items-start justify-between border-b border-emerald-700/40 pb-5 mb-2 gap-4">
                 <div>
                   <h3 className="text-2xl md:text-3xl font-extrabold text-white tracking-tight">{treatment.title}</h3>
@@ -381,7 +381,7 @@ const DiagnosticCapture = () => {
                     {resultData.mocked && <span className="bg-purple-100 text-purple-600 px-3 py-1 rounded-md text-xs font-semibold">Mock Data</span>}
                   </div>
                 </div>
-                
+
                 <span className={`px-4 py-1.5 rounded-full font-bold text-xs uppercase tracking-wide shadow-sm whitespace-nowrap ${treatment.severity === 'High' ? 'bg-red-100 text-red-600 border border-red-200' : treatment.severity === 'Moderate' ? 'bg-amber-100 text-amber-600 border border-amber-200' : 'bg-green-100 text-green-600 border border-green-200'}`}>
                   {treatment.severity}
                 </span>

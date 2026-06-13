@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Apple, Search, Flame, Droplet, Sparkles, 
+import {
+  Apple, Search, Flame, Droplet, Sparkles,
   Heart, BookOpen, UploadCloud, RefreshCw, AlertTriangle, Trash2, Volume2
 } from 'lucide-react';
 import { aiService } from '../services/aiService';
@@ -88,7 +88,7 @@ export default function NutrientAnalysis() {
   const handleAnalyze = async (e, customName = null) => {
     if (e) e.preventDefault();
     const queryName = customName || plantName;
-    
+
     if (!queryName.trim() && !selectedFile) {
       setError("Please type a plant name or select an image.");
       return;
@@ -128,19 +128,19 @@ export default function NutrientAnalysis() {
 
     try {
       let payload = { name: queryName };
-      
+
       if (selectedFile && !customName) {
         const base64Image = await readFileAsBase64(selectedFile);
         payload.image = base64Image;
         payload.filename = selectedFile.name;
       }
-      
+
       const result = await aiService.analyzeNutrition(payload);
       setAnalysisResult(result);
 
       // Fire-and-forget save to DB — powers the dashboard cards
       if (user && result) {
-        nutritionService.saveResult(user.$id, result.name || queryName, '', result).catch(() => {});
+        nutritionService.saveResult(user.$id, result.name || queryName, '', result).catch(() => { });
       }
 
       if (result && result.name && !queryName.trim()) {
@@ -222,16 +222,16 @@ export default function NutrientAnalysis() {
                 <span>Upload Plant Photo</span>
                 <span className="text-xs text-emerald-300/60 font-semibold bg-emerald-900/50 border border-emerald-700/50 px-2.5 py-1 rounded-full">Optional</span>
               </span>
-              <div 
+              <div
                 onClick={triggerFileSelect}
                 className="border-2 border-dashed border-emerald-700/50 hover:border-green-400/70 hover:bg-emerald-800/30 bg-emerald-900/20 rounded-2xl p-4 text-center cursor-pointer transition-all flex flex-col items-center justify-center min-h-[120px]"
               >
-                <input 
-                  type="file" 
-                  accept="image/*" 
-                  ref={fileInputRef} 
-                  onChange={handleFileChange} 
-                  className="hidden" 
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  onChange={handleFileChange}
+                  className="hidden"
                 />
                 {imagePreview ? (
                   <div className="relative group w-full flex justify-center">
@@ -348,13 +348,13 @@ export default function NutrientAnalysis() {
       <AnimatePresence mode="wait">
         {/* Loading State */}
         {isAnalyzing && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-12 border border-emerald-500/20 shadow-2xl flex flex-col items-center justify-center space-y-6 relative overflow-hidden"
           >
-            <motion.div 
+            <motion.div
               animate={{ y: ['-100%', '100%'] }}
               transition={{ repeat: Infinity, duration: 1.8, ease: "linear" }}
               className="w-full h-1.5 bg-green-500 shadow-[0_0_15px_rgba(34,197,94,1)] absolute top-0 left-0"
@@ -416,190 +416,190 @@ export default function NutrientAnalysis() {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              
-              {/* Left Column: Summary & Macronutrients */}
-              <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6 md:col-span-1">
-                <div className="text-center border-b border-gray-100 pb-5">
-                  <h2 className="text-2xl font-black text-white capitalize">{analysisResult.name}</h2>
-                  {analysisResult.detected_from_image && (
-                    <div className="inline-flex items-center gap-1 mt-1 bg-green-50 text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border border-green-200 uppercase tracking-wider">
-                      📸 Detected from Image
+
+                  {/* Left Column: Summary & Macronutrients */}
+                  <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6 md:col-span-1">
+                    <div className="text-center border-b border-gray-100 pb-5">
+                      <h2 className="text-2xl font-black text-white capitalize">{analysisResult.name}</h2>
+                      {analysisResult.detected_from_image && (
+                        <div className="inline-flex items-center gap-1 mt-1 bg-green-50 text-emerald-300 px-2.5 py-0.5 rounded-full text-[10px] font-extrabold border border-green-200 uppercase tracking-wider">
+                          📸 Detected from Image
+                        </div>
+                      )}
+                      <div className="flex justify-center gap-2 mt-2">
+                        <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">
+                          <Flame className="w-3.5 h-3.5" />
+                          {analysisResult.calories}
+                        </div>
+                      </div>
                     </div>
-                  )}
-                  <div className="flex justify-center gap-2 mt-2">
-                    <div className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-700 px-3 py-1 rounded-full text-xs font-bold border border-amber-200">
-                      <Flame className="w-3.5 h-3.5" />
-                      {analysisResult.calories}
+
+                    <div>
+                      <h3 className="text-sm font-extrabold text-emerald-50 mb-4 uppercase tracking-wider">Macronutrients Split</h3>
+                      <div className="space-y-4">
+                        {/* Carbs */}
+                        {(() => {
+                          const details = getMacroDetails('carbs');
+                          return (
+                            <div>
+                              <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
+                                <span>Carbohydrates</span>
+                                <span className="text-white font-extrabold">
+                                  {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
+                                </span>
+                              </div>
+                              <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-yellow-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]"
+                                  style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Protein */}
+                        {(() => {
+                          const details = getMacroDetails('protein');
+                          return (
+                            <div>
+                              <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
+                                <span>Protein</span>
+                                <span className="text-white font-extrabold">
+                                  {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
+                                </span>
+                              </div>
+                              <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-green-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]"
+                                  style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Fiber */}
+                        {(() => {
+                          const details = getMacroDetails('fiber');
+                          return (
+                            <div>
+                              <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
+                                <span>Dietary Fiber</span>
+                                <span className="text-white font-extrabold">
+                                  {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
+                                </span>
+                              </div>
+                              <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-emerald-600 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(5,150,105,0.5)]"
+                                  style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Fat */}
+                        {(() => {
+                          const details = getMacroDetails('fat');
+                          return (
+                            <div>
+                              <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
+                                <span>Fat</span>
+                                <span className="text-white font-extrabold">
+                                  {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
+                                </span>
+                              </div>
+                              <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
+                                <div
+                                  className="bg-red-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(248,113,113,0.5)]"
+                                  style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Vitamins & Minerals */}
+                  <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden md:col-span-2 space-y-6">
+                    <div>
+                      <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-3">
+                        <Droplet className="w-5 h-5 text-blue-500" />
+                        Micronutrient Composition
+                      </h3>
+                      <p className="text-xs text-emerald-300/60">Important vitamins and minerals per serving of {analysisResult.name}.</p>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                      {/* Vitamins */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-extrabold text-emerald-300/60 uppercase tracking-wider">Vitamins</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {analysisResult.vitamins?.map((vit, i) => (
+                            <span key={i} className="bg-green-50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-green-200/50">
+                              {vit}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Minerals */}
+                      <div className="space-y-3">
+                        <h4 className="text-xs font-extrabold text-emerald-300/60 uppercase tracking-wider">Minerals</h4>
+                        <div className="flex flex-wrap gap-2">
+                          {analysisResult.minerals?.map((min, i) => (
+                            <span key={i} className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-200/50">
+                              {min}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-extrabold text-emerald-50 mb-4 uppercase tracking-wider">Macronutrients Split</h3>
-                  <div className="space-y-4">
-                    {/* Carbs */}
-                    {(() => {
-                      const details = getMacroDetails('carbs');
-                      return (
-                        <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
-                            <span>Carbohydrates</span>
-                            <span className="text-white font-extrabold">
-                              {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
-                            </span>
-                          </div>
-                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="bg-yellow-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(234,179,8,0.5)]" 
-                              style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()}
+                {/* Health & Medicinal Benefits Grid */}
+                <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6">
+                  <div>
+                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                      <Heart className="w-5 h-5 text-red-500" />
+                      Health & Medicinal Benefits
+                    </h3>
+                  </div>
 
-                    {/* Protein */}
-                    {(() => {
-                      const details = getMacroDetails('protein');
-                      return (
-                        <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
-                            <span>Protein</span>
-                            <span className="text-white font-extrabold">
-                              {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
-                            </span>
-                          </div>
-                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="bg-green-500 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(34,197,94,0.5)]" 
-                              style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Fiber */}
-                    {(() => {
-                      const details = getMacroDetails('fiber');
-                      return (
-                        <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
-                            <span>Dietary Fiber</span>
-                            <span className="text-white font-extrabold">
-                              {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
-                            </span>
-                          </div>
-                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="bg-emerald-600 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(5,150,105,0.5)]" 
-                              style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()}
-
-                    {/* Fat */}
-                    {(() => {
-                      const details = getMacroDetails('fat');
-                      return (
-                        <div>
-                          <div className="flex justify-between text-xs font-bold mb-1.5 text-emerald-200/70">
-                            <span>Fat</span>
-                            <span className="text-white font-extrabold">
-                              {details.value}{details.percentage > 0 ? ` (${details.percentage}% DV)` : ''}
-                            </span>
-                          </div>
-                          <div className="w-full bg-emerald-900/40 h-2 rounded-full overflow-hidden">
-                            <div 
-                              className="bg-red-400 h-full rounded-full transition-all duration-500 shadow-[0_0_8px_rgba(248,113,113,0.5)]" 
-                              style={{ width: `${Math.min(100, Math.max(0, details.percentage))}%` }} 
-                            />
-                          </div>
-                        </div>
-                      );
-                    })()}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {analysisResult.health_benefits?.map((benefit, i) => (
+                      <div key={i} className="bg-emerald-900/30 border border-emerald-700/30 backdrop-blur-sm rounded-2xl p-5 space-y-2">
+                        <h4 className="font-extrabold text-sm text-emerald-50 flex items-center gap-1.5">
+                          <span className="text-green-500">✓</span>
+                          {benefit.title}
+                        </h4>
+                        <p className="text-xs text-emerald-200/70 leading-relaxed">{benefit.description}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
 
-              {/* Right Column: Vitamins & Minerals */}
-              <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden md:col-span-2 space-y-6">
-                <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2 mb-3">
-                    <Droplet className="w-5 h-5 text-blue-500" />
-                    Micronutrient Composition
+                {/* Usage/Preparation Tips */}
+                <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-sm space-y-4">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <BookOpen className="w-5 h-5 text-emerald-300" />
+                    Consumption & Preparation Guidelines
                   </h3>
-                  <p className="text-xs text-emerald-300/60">Important vitamins and minerals per serving of {analysisResult.name}.</p>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                  {/* Vitamins */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-extrabold text-emerald-300/60 uppercase tracking-wider">Vitamins</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {analysisResult.vitamins?.map((vit, i) => (
-                        <span key={i} className="bg-green-50 text-emerald-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-green-200/50">
-                          {vit}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Minerals */}
-                  <div className="space-y-3">
-                    <h4 className="text-xs font-extrabold text-emerald-300/60 uppercase tracking-wider">Minerals</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {analysisResult.minerals?.map((min, i) => (
-                        <span key={i} className="bg-blue-50 text-blue-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-blue-200/50">
-                          {min}
-                        </span>
-                      ))}
-                    </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {analysisResult.usage_tips?.map((tip, i) => (
+                      <div key={i} className="bg-emerald-900/30 border border-emerald-700/30 backdrop-blur-sm p-4 rounded-xl flex gap-2.5 items-start">
+                        <span className="text-green-600 font-extrabold text-sm shrink-0">💡</span>
+                        <p className="text-xs text-emerald-100 leading-relaxed font-medium">{tip}</p>
+                      </div>
+                    ))}
                   </div>
                 </div>
-              </div>
-            </div>
-
-            {/* Health & Medicinal Benefits Grid */}
-            <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-2xl relative overflow-hidden space-y-6">
-              <div>
-                <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                  <Heart className="w-5 h-5 text-red-500" />
-                  Health & Medicinal Benefits
-                </h3>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {analysisResult.health_benefits?.map((benefit, i) => (
-                  <div key={i} className="bg-emerald-900/30 border border-emerald-700/30 backdrop-blur-sm rounded-2xl p-5 space-y-2">
-                    <h4 className="font-extrabold text-sm text-emerald-50 flex items-center gap-1.5">
-                      <span className="text-green-500">✓</span>
-                      {benefit.title}
-                    </h4>
-                    <p className="text-xs text-emerald-200/70 leading-relaxed">{benefit.description}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Usage/Preparation Tips */}
-            <div className="bg-emerald-950/40 backdrop-blur-xl rounded-3xl p-6 md:p-8 border border-emerald-500/20 shadow-sm space-y-4">
-              <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-emerald-300" />
-                Consumption & Preparation Guidelines
-              </h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {analysisResult.usage_tips?.map((tip, i) => (
-                  <div key={i} className="bg-emerald-900/30 border border-emerald-700/30 backdrop-blur-sm p-4 rounded-xl flex gap-2.5 items-start">
-                    <span className="text-green-600 font-extrabold text-sm shrink-0">💡</span>
-                    <p className="text-xs text-emerald-100 leading-relaxed font-medium">{tip}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </>
+              </>
             )}
           </motion.div>
         )}

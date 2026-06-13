@@ -71,7 +71,7 @@ const SOIL_PH = {
 // ── Cache ─────────────────────────────────────────────────────────────────────
 
 const CACHE_TTL = 5 * 60 * 1000;
-const cacheKey = (userId) => `agrishield_dashboard_${userId}`;
+const cacheKey = (userId) => `agrishield_dashboard_v2_${userId}`;
 
 function getCache(userId) {
     try {
@@ -148,7 +148,7 @@ async function autoFetchSuitability(card, userId, currentTemp, condition) {
         }
 
         // Persist to DB (fire-and-forget)
-        suitabilityService.saveResult(userId, card.crop, card.soil || '', result).catch(() => {});
+        suitabilityService.saveResult(userId, card.crop, card.soil || '', result).catch(() => { });
 
         const tempScore = result.sub_scores?.temperature?.score ?? null;
         const soilScore = result.sub_scores?.soil?.score ?? null;
@@ -193,7 +193,22 @@ export const insightService = {
      */
     async buildDashboardCards(userId, { currentTemp = null, condition = 'Unknown', onCardUpdate = null } = {}) {
         const cached = getCache(userId);
-        if (cached) return cached;
+        if (cached) {
+            // For any cached card that still lacks suitability, set loading state and re-fetch
+            const pendingCards = cached.filter(c => !c.hasFullAnalysis);
+            if (pendingCards.length > 0 && onCardUpdate) {
+                const withLoading = cached.map(c =>
+                    c.hasFullAnalysis ? c : { ...c, loadingCompatibility: true }
+                );
+                for (const card of pendingCards) {
+                    autoFetchSuitability({ ...card, loadingCompatibility: true }, userId, currentTemp, condition)
+                        .then(updated => { if (updated) onCardUpdate(updated); })
+                        .catch(() => { });
+                }
+                return withLoading;
+            }
+            return cached;
+        }
 
         // Parallel fetch all 5 sources
         const [farms, diagLogs, suitDocs, , images] = await Promise.all([
@@ -307,7 +322,7 @@ export const insightService = {
                 if (!card.hasFullAnalysis) {
                     autoFetchSuitability(card, userId, currentTemp, condition)
                         .then(updated => { if (updated) onCardUpdate(updated); })
-                        .catch(() => {});
+                        .catch(() => { });
                 }
             }
         }

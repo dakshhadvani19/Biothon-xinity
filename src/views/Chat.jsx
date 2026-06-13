@@ -4,6 +4,7 @@ import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermo
 import { aiService } from '../services/aiService';
 import { farmService } from '../services/farmService';
 import { chatService, serializeMessages, deserializeMessages, formatChatDate } from '../services/chatService';
+import { groupChatsByDate } from '../utils/dateFormatter';
 import { useAuth } from '../context/AuthContext';
 import useLiveWeather from '../hooks/useLiveWeather';
 import { useSpeech } from '../context/SpeechContext';
@@ -89,7 +90,7 @@ export default function Chat() {
   // ── Load farm data ───────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) { setFarmsLoaded(true); return; }
-    farmService.getUserFarms(user.$id).then(f => setFarms(f)).catch(() => {}).finally(() => setFarmsLoaded(true));
+    farmService.getUserFarms(user.$id).then(f => setFarms(f)).catch(() => { }).finally(() => setFarmsLoaded(true));
   }, [user]);
 
   // ── Update welcome message once farms + weather ready ───────────────────
@@ -111,7 +112,7 @@ export default function Chat() {
   // ── Load chat history ────────────────────────────────────────────────────
   useEffect(() => {
     if (!user) return;
-    chatService.getUserChats(user.$id).then(docs => setChatList(docs)).catch(() => {});
+    chatService.getUserChats(user.$id).then(docs => setChatList(docs)).catch(() => { });
   }, [user]);
 
   // ── Suggestion chips ─────────────────────────────────────────────────────
@@ -288,41 +289,45 @@ export default function Chat() {
               </p>
             </div>
           ) : (
-            <div className="p-2 space-y-1">
+            <div className="p-2 space-y-4">
               <AnimatePresence initial={false}>
-                {filteredChats.map(chat => (
-                  <motion.div
-                    key={chat.$id}
-                    layout
-                    initial={{ opacity: 0, scale: 0.97 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.95 }}
-                    transition={{ duration: 0.12 }}
-                    onClick={() => handleLoadChat(chat)}
-                    className={`group flex items-start gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
-                      currentChatId === chat.$id
-                        ? 'bg-[#111A11] border border-green-800/50 text-green-400'
-                        : 'text-gray-400 hover:bg-[#111A11] hover:text-gray-200 border border-transparent'
-                    }`}
-                  >
-                    <MessageSquare className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-60" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-semibold truncate leading-snug">
-                        <HighlightedTitle title={chat.title} query={searchQuery} />
-                      </p>
-                      <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
-                        <Clock className="w-2.5 h-2.5" />
-                        {formatChatDate(chat.updated_at)}
-                      </p>
-                    </div>
-                    <button
-                      onClick={e => handleDeleteChat(chat.$id, e)}
-                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all shrink-0"
-                      title="Delete chat"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                    </button>
-                  </motion.div>
+                {groupChatsByDate(filteredChats).map(([groupName, groupChats]) => (
+                  <div key={groupName} className="space-y-1">
+                    <h3 className="px-3 text-[10px] font-extrabold text-gray-500 uppercase tracking-wider mb-1.5">{groupName}</h3>
+                    {groupChats.map(chat => (
+                      <motion.div
+                        key={chat.$id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.97 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        transition={{ duration: 0.12 }}
+                        onClick={() => handleLoadChat(chat)}
+                        className={`group flex items-start gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${currentChatId === chat.$id
+                            ? 'bg-[#111A11] border border-green-800/50 text-green-400'
+                            : 'text-gray-400 hover:bg-[#111A11] hover:text-gray-200 border border-transparent'
+                          }`}
+                      >
+                        <MessageSquare className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-60" />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-semibold truncate leading-snug">
+                            <HighlightedTitle title={chat.title} query={searchQuery} />
+                          </p>
+                          <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
+                            <Clock className="w-2.5 h-2.5" />
+                            {formatChatDate(chat.updated_at)}
+                          </p>
+                        </div>
+                        <button
+                          onClick={e => handleDeleteChat(chat.$id, e)}
+                          className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all shrink-0"
+                          title="Delete chat"
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </button>
+                      </motion.div>
+                    ))}
+                  </div>
                 ))}
               </AnimatePresence>
             </div>
@@ -381,11 +386,10 @@ export default function Chat() {
                       <Leaf className="w-4 h-4" />
                     </div>
                   )}
-                  <div className={`max-w-[78%] rounded-2xl px-5 py-3.5 text-[14.5px] leading-relaxed shadow-sm ${
-                    msg.role === 'user'
+                  <div className={`max-w-[78%] rounded-2xl px-5 py-3.5 text-[14.5px] leading-relaxed shadow-sm ${msg.role === 'user'
                       ? 'bg-gradient-to-r from-green-500 to-green-600 text-white rounded-br-none font-medium'
                       : 'bg-[#111A11] border border-[#1C2A1C] text-gray-300 rounded-bl-none'
-                  }`}>
+                    }`}>
                     {msg.role === 'user' ? (
                       <span>{msg.content}</span>
                     ) : (
