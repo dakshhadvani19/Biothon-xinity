@@ -54,6 +54,7 @@ export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
 
         // Combine today and tomorrow's hourly forecast
         let hourlyForecast = [];
+        let fullHourlyData = [];
         if (data.forecast && data.forecast.forecastday) {
             const todayHours = data.forecast.forecastday[0]?.hour || [];
             const tomorrowHours = data.forecast.forecastday[1]?.hour || [];
@@ -61,14 +62,15 @@ export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
 
             const currentEpoch = Math.floor(Date.now() / 1000);
 
-            hourlyForecast = combinedHours
-                .filter(hour => hour.time_epoch >= currentEpoch)
-                .map(hour => ({
-                    timestamp: hour.time,
-                    temp: hour.temp_c,
-                    rainChance: hour.chance_of_rain,
-                    windSpeed: hour.wind_kph
-                }));
+            fullHourlyData = combinedHours.map(hour => ({
+                timestamp: hour.time,
+                time_epoch: hour.time_epoch,
+                temp: hour.temp_c,
+                rainChance: hour.chance_of_rain,
+                windSpeed: hour.wind_kph
+            }));
+
+            hourlyForecast = fullHourlyData.filter(hour => hour.time_epoch >= currentEpoch);
         }
 
         const alerts = data.alerts?.alert || [];
@@ -89,6 +91,7 @@ export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
             currentTemp,
             condition,
             hourlyForecast,
+            fullHourlyData,
             alerts,
             // Preserved fields for backward compatibility with older UI components
             temp: currentTemp,
@@ -104,6 +107,7 @@ export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
             currentTemp: 0,
             condition: "Unavailable",
             hourlyForecast: [],
+            fullHourlyData: [],
             alerts: [],
             temp: 0,
             isRainImminent: false,

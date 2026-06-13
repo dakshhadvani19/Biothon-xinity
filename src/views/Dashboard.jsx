@@ -7,6 +7,7 @@ import {
 import { NavLink } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { insightService, clearInsightCache } from '../services/insightService';
+import TelemetryChart from '../components/TelemetryChart';
 import useLiveWeather from '../hooks/useLiveWeather';
 
 // ── Progressive loader ────────────────────────────────────────────────────────
@@ -195,6 +196,17 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
+  const [showAllCharts, setShowAllCharts] = useState(false);
+  const [loadingMoreCharts, setLoadingMoreCharts] = useState(false);
+
+  const handleShowMoreCharts = () => {
+    setLoadingMoreCharts(true);
+    setTimeout(() => {
+      setShowAllCharts(true);
+      setLoadingMoreCharts(false);
+    }, 1200);
+  };
+
   const loadCards = useCallback(async (force = false) => {
     if (authLoading) return;
     if (!user) { setLoading(false); return; }
@@ -376,6 +388,54 @@ export default function Dashboard() {
           )}
         </div>
       </div>
+
+      {/* Telemetry Trends Section */}
+      {!loading && cards.length > 0 && weatherData?.fullHourlyData && (
+        <div className="pt-6 border-t border-[#1C2A1C] space-y-6">
+          <h2 className="text-xl font-black text-white">Your Farms Crop Growth Tracking</h2>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TelemetryChart cropName={cards[0].crop} fullHourlyData={weatherData.fullHourlyData} />
+            
+            <AnimatePresence>
+              {showAllCharts && cards.slice(1).map(card => (
+                 <motion.div key={card.id} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }} transition={{ duration: 0.5 }}>
+                   <TelemetryChart cropName={card.crop} fullHourlyData={weatherData.fullHourlyData} />
+                 </motion.div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {cards.length > 1 && !showAllCharts && (
+             <div className="flex justify-center pt-2">
+                <button 
+                  onClick={handleShowMoreCharts}
+                  disabled={loadingMoreCharts}
+                  className="relative overflow-hidden px-6 py-3 rounded-xl border border-blue-900/50 bg-[#0D150D] text-blue-400 font-bold group transition-all"
+                >
+                  {/* Water flow hover animation */}
+                  <div className="absolute top-0 bottom-0 left-[-100%] w-[200%] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent group-hover:translate-x-[100%] transition-transform duration-1000 ease-in-out" />
+                  
+                  <span className="relative z-10 flex items-center gap-2">
+                    {loadingMoreCharts ? (
+                      <>
+                        <div className="flex gap-1 h-[24px] items-center">
+                           {[0, 150, 300].map(d => (
+                              <div key={d} className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                           ))}
+                        </div>
+                        Loading Tracking...
+                      </>
+                    ) : (
+                      "Show More Tracking"
+                    )}
+                  </span>
+                </button>
+             </div>
+          )}
+        </div>
+      )}
+
     </div>
   );
 }
