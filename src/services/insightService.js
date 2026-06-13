@@ -144,7 +144,16 @@ async function autoFetchSuitability(card, userId, currentTemp, condition) {
         });
 
         if (result.not_in_database) {
-            return { ...card, loadingCompatibility: false };
+            const updatedCard = {
+                ...card,
+                compatibility: 'N/A',
+                summary: result.message || 'No specific weather/soil analysis available for this crop.',
+                recommendations: [],
+                hasFullAnalysis: true,
+                loadingCompatibility: false
+            };
+            updateCachedCard(userId, updatedCard);
+            return updatedCard;
         }
 
         // Persist to DB (fire-and-forget)

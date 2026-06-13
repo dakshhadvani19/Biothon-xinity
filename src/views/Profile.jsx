@@ -637,7 +637,7 @@ export default function Profile() {
                             
                             {testResponse.pdf_url && (
                                 <a 
-                                    href={import.meta.env.DEV ? `http://127.0.0.1:8000${testResponse.pdf_url}` : testResponse.pdf_url} 
+                                    href={testResponse.pdf_url} 
                                     target="_blank" 
                                     rel="noreferrer"
                                     className="inline-flex items-center gap-1 text-xs font-bold text-green-700 hover:underline mt-1"

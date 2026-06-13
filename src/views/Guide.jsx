@@ -232,9 +232,7 @@ export default function Guide() {
   const [fetchingFarms, setFetchingFarms] = useState(false);
   const [error, setError]           = useState(null);
 
-  const apiBase = import.meta.env.DEV
-    ? 'http://127.0.0.1:8000'
-    : (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
+  const apiBase = (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
 
   // Load gallery + diagnostic logs simultaneously
   const openGallery = async () => {
