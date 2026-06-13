@@ -190,7 +190,7 @@ function EmptyState() {
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
   const { user } = useAuth();
-  const { data: weatherData } = useLiveWeather();
+  const { data: weatherData, loading: weatherLoading } = useLiveWeather();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -220,6 +220,16 @@ export default function Dashboard() {
   const avgHealthScore = cards.length > 0 ? cards.reduce((sum, c) => sum + c.healthScore, 0) / cards.length : null;
   const healthPct = avgHealthScore != null ? Math.round((avgHealthScore / 10) * 100) : null;
 
+  const isInitialLoad = (loading || weatherLoading) && cards.length === 0 && !error;
+
+  if (isInitialLoad) {
+    return (
+      <div className="flex items-center justify-center min-h-[80vh] w-full">
+        <ProgressiveLoader />
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 w-full">
       {/* Header */}
@@ -239,11 +249,11 @@ export default function Dashboard() {
       {/* Top stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         {[
-          { icon: ShieldCheck, iconColor: 'text-green-500', label: 'Field Health', value: loading ? '—' : healthPct != null ? `${healthPct}% Healthy` : 'No data' },
-          { icon: Beaker, iconColor: 'text-blue-400', label: 'Crops Tracked', value: loading ? '—' : `${cards.length} crop${cards.length !== 1 ? 's' : ''}` },
-          { icon: TrendingUp, iconColor: 'text-orange-400', label: 'Live Temp', value: weatherData ? `${weatherData.currentTemp}°C` : '—', highlight: true },
-          { icon: AlertTriangle, iconColor: 'text-red-500', label: 'Active Threats', value: loading ? '—' : threatCards.length > 0 ? `${threatCards.length} Active` : 'None', valueColor: threatCards.length > 0 ? 'text-red-500' : 'text-white' },
-        ].map(({ icon: Icon, iconColor, label, value, highlight, valueColor = 'text-white' }) => (
+          { icon: ShieldCheck, iconColor: 'text-green-500', label: 'Field Health', value: healthPct != null ? `${healthPct}% Healthy` : 'No data', isLoading: loading },
+          { icon: Beaker, iconColor: 'text-blue-400', label: 'Crops Tracked', value: `${cards.length} crop${cards.length !== 1 ? 's' : ''}`, isLoading: loading },
+          { icon: TrendingUp, iconColor: 'text-orange-400', label: 'Live Temp', value: weatherData ? `${weatherData.currentTemp}°C` : '—', highlight: true, isLoading: weatherLoading },
+          { icon: AlertTriangle, iconColor: 'text-red-500', label: 'Active Threats', value: threatCards.length > 0 ? `${threatCards.length} Active` : 'None', valueColor: threatCards.length > 0 ? 'text-red-500' : 'text-white', isLoading: loading },
+        ].map(({ icon: Icon, iconColor, label, value, highlight, valueColor = 'text-white', isLoading }) => (
           <div key={label} className={`${highlight ? 'bg-[#111A11] border-green-900/50' : 'bg-[#0D150D] border-[#1C2A1C]'} border rounded-2xl p-5 flex items-center gap-4 shadow-sm relative overflow-hidden`}>
             {highlight && <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />}
             <div className={`${highlight ? 'bg-[#1A251A] border-green-900/50' : 'bg-[#111A11] border-[#1C2A1C]'} p-3 rounded-xl border relative z-10`}>
@@ -251,7 +261,15 @@ export default function Dashboard() {
             </div>
             <div className="relative z-10">
               <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">{label}</div>
-              <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
+              {isLoading ? (
+                <div className="flex items-center gap-1 h-[32px]">
+                  {[0, 150, 300].map(d => (
+                    <div key={d} className="w-1.5 h-1.5 rounded-full bg-green-500/60 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                  ))}
+                </div>
+              ) : (
+                <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
+              )}
             </div>
           </div>
         ))}
@@ -264,11 +282,7 @@ export default function Dashboard() {
         <div className="lg:col-span-2 space-y-4">
           <h2 className="text-lg font-bold text-white">Field Overview</h2>
           <AnimatePresence mode="wait">
-            {loading ? (
-              <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-                <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl"><ProgressiveLoader /></div>
-              </motion.div>
-            ) : error ? (
+            {error ? (
               <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#0D150D] border border-red-900/30 rounded-2xl p-8 text-center space-y-4">
                 <AlertTriangle className="w-10 h-10 text-red-500 mx-auto" />
                 <p className="text-white font-bold">Could not load your field data.</p>
