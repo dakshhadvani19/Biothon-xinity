@@ -14,8 +14,8 @@ const BUCKET_ID = APPWRITE_CONFIG.imagesBucketId         || '6a1d4761001a437b2e0
 const buildViewUrl = (fileId) => {
     if (!fileId) return null;
     try {
-        // storage.getFilePreview returns a URL object — convert to string
-        const url = storage.getFilePreview(BUCKET_ID, fileId, 800, 800);
+        // Use getFileView instead of getFilePreview to avoid 403 "Image transformations blocked on free plan"
+        const url = storage.getFileView(BUCKET_ID, fileId);
         return url ? url.href || url.toString() : null;
     } catch {
         return null;
