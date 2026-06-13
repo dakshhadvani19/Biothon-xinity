@@ -200,7 +200,7 @@ export default function Chat() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto space-y-4 pb-12 flex flex-col pt-8" style={{ height: 'calc(100vh - 40px)', minHeight: '520px' }}>
+    <div className="w-[80%] mx-auto space-y-4 pb-12 flex flex-col pt-8" style={{ height: 'calc(100vh - 40px)', minHeight: '520px' }}>
       {/* Header */}
       <header className="flex items-start justify-between shrink-0 gap-4">
         <div>
