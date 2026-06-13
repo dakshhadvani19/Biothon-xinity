@@ -103,7 +103,9 @@ export default function Chat() {
     }
     if (weatherData) text += `Current weather: **${weatherData.currentTemp}°C**, ${weatherData.condition}.\n`;
     text += "\nAsk me anything about your crops, soil, irrigation, pests, or fertilizers!";
-    setMessages([WELCOME_MSG(text)]);
+    // Only overwrite if no real conversation has started — guards against
+    // weatherData arriving late (live fetch) and wiping an active chat.
+    setMessages(prev => prev.some(m => !m.isWelcome) ? prev : [WELCOME_MSG(text)]);
   }, [farmsLoaded, weatherData]);
 
   // ── Load chat history ────────────────────────────────────────────────────
@@ -356,12 +358,6 @@ export default function Chat() {
                   {farms.length > 0 ? `${farms.length} farm${farms.length > 1 ? 's' : ''} loaded` : 'No farms'}
                 </span>
               )}
-              {weatherData && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold bg-sky-50 text-sky-700 border border-sky-200">
-                  <Thermometer className="w-3 h-3" />
-                  {weatherData.currentTemp}°C
-                </span>
-              )}
             </div>
           </div>
         </header>
@@ -474,9 +470,6 @@ export default function Chat() {
                 <Send className="w-4 h-4" />
               </button>
             </form>
-            <p className="text-[11px] text-gray-400 text-center mt-2 font-medium">
-              Powered by Groq · Answers are grounded in your registered farm data
-            </p>
           </div>
         </div>
       </div>
