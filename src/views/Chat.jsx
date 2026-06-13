@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermometer, Wind, CloudRain, Volume2, Plus, Search, Clock, MessageCircle } from 'lucide-react';
+import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermometer, Wind, CloudRain, Volume2, Plus, Search, Clock, MessageCircle, AlertTriangle, X } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { farmService } from '../services/farmService';
 import { chatService, serializeMessages, deserializeMessages, formatChatDate } from '../services/chatService';
@@ -50,6 +50,20 @@ function FormattedMessage({ content }) {
   );
 }
 
+// Highlights the matched portion of a chat title during search
+function HighlightedTitle({ title, query }) {
+  if (!query.trim()) return <span>{title}</span>;
+  const idx = title.toLowerCase().indexOf(query.toLowerCase());
+  if (idx === -1) return <span>{title}</span>;
+  return (
+    <>
+      {title.slice(0, idx)}
+      <span className="text-green-400 font-bold">{title.slice(idx, idx + query.length)}</span>
+      {title.slice(idx + query.length)}
+    </>
+  );
+}
+
 const WELCOME_MSG = (text) => ({ role: 'assistant', content: text, content_hi: '', isWelcome: true });
 
 export default function Chat() {
@@ -63,6 +77,7 @@ export default function Chat() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const [chatList, setChatList] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
   const [messages, setMessages] = useState([
     WELCOME_MSG("Welcome to AgriShield AI Chat Advisor!\n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!")
@@ -202,11 +217,17 @@ export default function Chat() {
   };
 
   // ── Delete chat ──────────────────────────────────────────────────────────
-  const handleDeleteChat = async (chatId, e) => {
+  const handleDeleteChat = (chatId, e) => {
     e.stopPropagation();
-    await chatService.deleteChat(chatId);
-    setChatList(prev => prev.filter(c => c.$id !== chatId));
-    if (currentChatId === chatId) handleNewChat();
+    setDeleteConfirmId(chatId);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteConfirmId) return;
+    await chatService.deleteChat(deleteConfirmId);
+    setChatList(prev => prev.filter(c => c.$id !== deleteConfirmId));
+    if (currentChatId === deleteConfirmId) handleNewChat();
+    setDeleteConfirmId(null);
   };
 
   // ── Search filter ────────────────────────────────────────────────────────
@@ -232,9 +253,9 @@ export default function Chat() {
         </div>
 
         {/* Search */}
-        <div className="px-3 py-2.5 border-b border-[#1C2A1C]">
-          <div className="flex items-center gap-2 bg-[#111A11] border border-[#1C2A1C] rounded-xl px-3 py-2">
-            <Search className="w-3.5 h-3.5 text-gray-500 shrink-0" />
+        <div className="px-3 py-2.5 border-b border-[#1C2A1C] space-y-1.5">
+          <div className={`flex items-center gap-2 bg-[#111A11] border rounded-xl px-3 py-2 transition-all ${searchQuery ? 'border-green-700/60' : 'border-[#1C2A1C]'}`}>
+            <Search className={`w-3.5 h-3.5 shrink-0 transition-colors ${searchQuery ? 'text-green-500' : 'text-gray-500'}`} />
             <input
               type="text"
               value={searchQuery}
@@ -242,7 +263,17 @@ export default function Chat() {
               placeholder="Search chats..."
               className="bg-transparent border-none outline-none text-xs text-white placeholder-gray-500 w-full"
             />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery('')} className="text-gray-500 hover:text-gray-300 transition-colors shrink-0">
+                <X className="w-3 h-3" />
+              </button>
+            )}
           </div>
+          {searchQuery && (
+            <p className="text-[10px] px-1 font-semibold text-green-500/80">
+              {filteredChats.length} result{filteredChats.length !== 1 ? 's' : ''} for "{searchQuery}"
+            </p>
+          )}
         </div>
 
         {/* Chat list */}
@@ -251,38 +282,47 @@ export default function Chat() {
             <div className="flex flex-col items-center justify-center h-full gap-3 px-4 text-center">
               <MessageCircle className="w-8 h-8 text-gray-600" />
               <p className="text-xs text-gray-500 font-medium">
-                {chatList.length === 0 ? 'Your chat history will appear here' : 'No chats match your search'}
+                {chatList.length === 0 ? 'Your chat history will appear here' : `No chats match "${searchQuery}"`}
               </p>
             </div>
           ) : (
             <div className="p-2 space-y-1">
-              {filteredChats.map(chat => (
-                <div
-                  key={chat.$id}
-                  onClick={() => handleLoadChat(chat)}
-                  className={`group flex items-start gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
-                    currentChatId === chat.$id
-                      ? 'bg-[#111A11] border border-green-800/50 text-green-400'
-                      : 'text-gray-400 hover:bg-[#111A11] hover:text-gray-200 border border-transparent'
-                  }`}
-                >
-                  <MessageSquare className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-60" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold truncate leading-snug">{chat.title}</p>
-                    <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
-                      <Clock className="w-2.5 h-2.5" />
-                      {formatChatDate(chat.updated_at)}
-                    </p>
-                  </div>
-                  <button
-                    onClick={e => handleDeleteChat(chat.$id, e)}
-                    className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all shrink-0"
-                    title="Delete chat"
+              <AnimatePresence initial={false}>
+                {filteredChats.map(chat => (
+                  <motion.div
+                    key={chat.$id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.97 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.12 }}
+                    onClick={() => handleLoadChat(chat)}
+                    className={`group flex items-start gap-2 px-3 py-2.5 rounded-xl cursor-pointer transition-all ${
+                      currentChatId === chat.$id
+                        ? 'bg-[#111A11] border border-green-800/50 text-green-400'
+                        : 'text-gray-400 hover:bg-[#111A11] hover:text-gray-200 border border-transparent'
+                    }`}
                   >
-                    <Trash2 className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
+                    <MessageSquare className="w-3.5 h-3.5 mt-0.5 shrink-0 opacity-60" />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-semibold truncate leading-snug">
+                        <HighlightedTitle title={chat.title} query={searchQuery} />
+                      </p>
+                      <p className="text-[10px] text-gray-500 mt-0.5 flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5" />
+                        {formatChatDate(chat.updated_at)}
+                      </p>
+                    </div>
+                    <button
+                      onClick={e => handleDeleteChat(chat.$id, e)}
+                      className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-red-500/10 hover:text-red-400 transition-all shrink-0"
+                      title="Delete chat"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
           )}
         </div>
@@ -440,6 +480,73 @@ export default function Chat() {
           </div>
         </div>
       </div>
+
+      {/* ── Delete Confirmation Modal ── */}
+      <AnimatePresence>
+        {deleteConfirmId && (() => {
+          const chat = chatList.find(c => c.$id === deleteConfirmId);
+          return (
+            <motion.div
+              key="delete-overlay"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+              onClick={() => setDeleteConfirmId(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.92, y: 8 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.92, y: 8 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                onClick={e => e.stopPropagation()}
+                className="w-[320px] bg-[#0D150D] border border-[#1C2A1C] rounded-2xl overflow-hidden shadow-2xl"
+              >
+                {/* Red accent bar */}
+                <div className="h-1 bg-gradient-to-r from-red-600 to-rose-500" />
+
+                <div className="p-5">
+                  {/* Icon + heading */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-10 h-10 rounded-xl bg-red-500/10 border border-red-500/20 flex items-center justify-center shrink-0">
+                      <AlertTriangle className="w-5 h-5 text-red-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Delete this chat?</h3>
+                      <p className="text-[11px] text-gray-500 mt-0.5">This cannot be undone.</p>
+                    </div>
+                  </div>
+
+                  {/* Chat title preview */}
+                  {chat && (
+                    <div className="bg-[#111A11] border border-[#1C2A1C] rounded-xl px-3.5 py-2.5 mb-5">
+                      <p className="text-xs text-gray-300 font-medium leading-snug line-clamp-2">"{chat.title}"</p>
+                    </div>
+                  )}
+
+                  {/* Actions */}
+                  <div className="flex gap-2.5">
+                    <button
+                      onClick={() => setDeleteConfirmId(null)}
+                      className="flex-1 px-4 py-2.5 text-xs font-bold text-gray-300 bg-[#1C2A1C] hover:bg-[#243624] border border-[#2A3A2A] rounded-xl transition-all active:scale-95"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={confirmDelete}
+                      className="flex-1 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-red-600 to-rose-600 hover:from-red-700 hover:to-rose-700 rounded-xl transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                      Delete
+                    </button>
+                  </div>
+                </div>
+              </motion.div>
+            </motion.div>
+          );
+        })()}
+      </AnimatePresence>
     </div>
   );
 }
