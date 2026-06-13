@@ -168,9 +168,17 @@ export default function Chat() {
         ctx.weather,
         ctx.userName
       );
-      // Handle new bilingual response format {content_en, content_hi} and old {content}
-      const contentEn = response.content_en || response.content || 'No response received.';
-      const contentHi = response.content_hi || '';
+      let contentEn = response.content_en || response.content || 'No response received.';
+      let contentHi = response.content_hi || '';
+      
+      // Defend against LLM hallucinating arrays or objects instead of strings
+      if (typeof contentEn !== 'string') {
+        contentEn = Array.isArray(contentEn) ? contentEn.join('\n') : JSON.stringify(contentEn);
+      }
+      if (typeof contentHi !== 'string') {
+        contentHi = Array.isArray(contentHi) ? contentHi.join('\n') : JSON.stringify(contentHi);
+      }
+
       setMessages(prev => [...prev, { role: 'assistant', content: contentEn, content_hi: contentHi }]);
     } catch (error) {
       console.error('Chat failure:', error);
