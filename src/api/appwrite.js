@@ -22,6 +22,8 @@ export const APPWRITE_CONFIG = {
     userImagesCollectionId: import.meta.env.VITE_APPWRITE_USER_IMAGES_COLLECTION_ID,
     userAuthCollectionId: import.meta.env.VITE_APPWRITE_USER_AUTH_COLLECTION_ID,
     chatsCollectionId: import.meta.env.VITE_APPWRITE_CHATS_COLLECTION_ID,
+    cropSuitabilityCollectionId: import.meta.env.VITE_APPWRITE_CROP_SUITABILITY_COLLECTION_ID,
+    nutritionCollectionId: import.meta.env.VITE_APPWRITE_NUTRITION_COLLECTION_ID,
 };
 
 export default client;

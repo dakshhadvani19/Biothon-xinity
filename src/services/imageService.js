@@ -79,13 +79,17 @@ export const imageService = {
      * Saves a record linking userId → fileId in the userimages collection.
      * Silently skips if the record already exists (409).
      */
-    saveUserImageRecord: async (userId, fileId) => {
+    saveUserImageRecord: async (userId, fileId, cropName = '') => {
         try {
             await databases.createDocument(
                 DB_ID,
                 COL_ID,
                 ID.unique(),
-                { user_id: userId, file_id: fileId },
+                {
+                    user_id: userId,
+                    file_id: fileId,
+                    ...(cropName ? { crop_name: cropName } : {}),
+                },
                 [
                     Permission.read(Role.user(userId)),
                     Permission.write(Role.user(userId)),

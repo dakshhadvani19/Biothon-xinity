@@ -5,9 +5,12 @@ import {
   Heart, BookOpen, UploadCloud, RefreshCw, AlertTriangle, Trash2, Volume2
 } from 'lucide-react';
 import { aiService } from '../services/aiService';
+import { nutritionService } from '../services/nutritionService';
 import { useSpeech } from '../context/SpeechContext';
+import { useAuth } from '../context/AuthContext';
 
 export default function NutrientAnalysis() {
+  const { user } = useAuth();
   const { speak } = useSpeech();
   const [plantName, setPlantName] = useState('');
   const [selectedFile, setSelectedFile] = useState(null);
@@ -134,7 +137,12 @@ export default function NutrientAnalysis() {
       
       const result = await aiService.analyzeNutrition(payload);
       setAnalysisResult(result);
-      
+
+      // Fire-and-forget save to DB — powers the dashboard cards
+      if (user && result) {
+        nutritionService.saveResult(user.$id, result.name || queryName, '', result).catch(() => {});
+      }
+
       if (result && result.name && !queryName.trim()) {
         setPlantName(result.name);
       }

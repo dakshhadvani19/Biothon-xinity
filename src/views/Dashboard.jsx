@@ -1,232 +1,354 @@
-import React from 'react';
-import { ShieldCheck, Beaker, Thermometer, AlertTriangle, FileText } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  ShieldCheck, AlertTriangle, Leaf, Sprout, RefreshCw,
+  ArrowRight, ImageOff, CheckCircle2, Beaker, Activity, TrendingUp,
+} from 'lucide-react';
+import { NavLink } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { insightService, clearInsightCache } from '../services/insightService';
+import useLiveWeather from '../hooks/useLiveWeather';
 
-const Dashboard = () => {
+// ── Progressive loader ────────────────────────────────────────────────────────
+const LOAD_STEPS = [
+  'Connecting to your farm records...',
+  'Loading crop health data...',
+  'Cross-referencing field analyses...',
+  'Compiling your field overview...',
+  'Almost ready...',
+];
+
+function ProgressiveLoader() {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setStep(s => Math.min(s + 1, LOAD_STEPS.length - 1)), 800);
+    return () => clearInterval(id);
+  }, []);
+  const pct = Math.round(((step + 1) / LOAD_STEPS.length) * 100);
   return (
-    <div className="p-8 max-w-7xl mx-auto space-y-8 w-full">
+    <div className="flex flex-col items-center justify-center py-28 px-6 gap-8">
+      <div className="relative">
+        <div className="w-16 h-16 rounded-2xl bg-[#111A11] border border-[#1C2A1C] flex items-center justify-center">
+          <Leaf className="w-7 h-7 text-green-500 animate-pulse" />
+        </div>
+        <div className="absolute inset-0 border-2 border-green-500/20 border-t-green-500 rounded-2xl animate-spin" />
+      </div>
+      <div className="w-full max-w-xs">
+        <div className="h-1 bg-[#1C2A1C] rounded-full overflow-hidden">
+          <motion.div
+            className="h-full bg-gradient-to-r from-green-500 to-emerald-400 rounded-full"
+            initial={{ width: 0 }}
+            animate={{ width: `${pct}%` }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
+          />
+        </div>
+      </div>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={step}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.25 }}
+          className="text-sm font-semibold text-gray-400 text-center"
+        >
+          {LOAD_STEPS[step]}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// ── Score ring ────────────────────────────────────────────────────────────────
+function ScoreRing({ score }) {
+  const r = 16;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (circ * score) / 10;
+  const color = score >= 8 ? '#22c55e' : score >= 5 ? '#f59e0b' : '#ef4444';
+  return (
+    <svg width="42" height="42" style={{ transform: 'rotate(-90deg)' }}>
+      <circle cx="21" cy="21" r={r} stroke="#1C2A1C" strokeWidth="4" fill="none" />
+      <motion.circle
+        cx="21" cy="21" r={r} stroke={color} strokeWidth="4" fill="none"
+        strokeDasharray={circ}
+        initial={{ strokeDashoffset: circ }}
+        animate={{ strokeDashoffset: offset }}
+        transition={{ duration: 0.8, ease: 'easeOut' }}
+        strokeLinecap="round"
+      />
+      <text
+        x="21" y="21" textAnchor="middle" dominantBaseline="middle"
+        style={{ transform: 'rotate(90deg)', transformOrigin: '21px 21px', fontSize: '10px', fontWeight: 700, fill: color }}
+      >
+        {score}
+      </text>
+    </svg>
+  );
+}
+
+// ── Field card ────────────────────────────────────────────────────────────────
+function FieldCard({ card }) {
+  const sc = {
+    green: { badge: 'text-green-400 bg-green-500/10 border-green-500/20', border: 'border-[#1C2A1C]' },
+    amber: { badge: 'text-amber-400 bg-amber-500/10 border-amber-500/20', border: 'border-amber-900/30' },
+    red:   { badge: 'text-red-400 bg-red-500/10 border-red-500/20',       border: 'border-red-900/30' },
+  }[card.status.color] || { badge: 'text-green-400 bg-green-500/10 border-green-500/20', border: 'border-[#1C2A1C]' };
+
+  return (
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.25 }}
+      className={`bg-[#0D150D] border ${sc.border} rounded-2xl p-5 shadow-sm flex flex-col gap-3`}
+    >
+      <div className="flex items-start justify-between gap-2">
+        <div className="flex items-center gap-2.5 min-w-0">
+          {card.imageUrl ? (
+            <img src={card.imageUrl} alt={card.crop} className="w-9 h-9 rounded-xl object-cover shrink-0 border border-[#1C2A1C]" onError={e => { e.currentTarget.style.display = 'none'; }} />
+          ) : (
+            <div className="w-9 h-9 rounded-xl bg-[#111A11] border border-[#1C2A1C] flex items-center justify-center shrink-0">
+              <Sprout className="w-4 h-4 text-green-600" />
+            </div>
+          )}
+          <div className="min-w-0">
+            <h3 className="text-white font-bold text-sm truncate">{card.crop}</h3>
+            {card.soil && <p className="text-[10px] text-gray-500 truncate">{card.soil}</p>}
+          </div>
+        </div>
+        <div className="flex items-center gap-2 shrink-0">
+          <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${card.way === 1 ? 'text-green-500 bg-green-500/10 border-green-500/20' : 'text-sky-400 bg-sky-500/10 border-sky-500/20'}`}>
+            {card.way === 1 ? 'Farm' : 'Detected'}
+          </span>
+          <ScoreRing score={card.healthScore} />
+        </div>
+      </div>
+
+      <span className={`self-start text-xs font-bold px-2.5 py-1 rounded-lg border ${sc.badge}`}>
+        {card.status.label}
+      </span>
+
+      <div className="grid grid-cols-3 gap-2 text-center">
+        {[
+          { label: 'TEMP',    value: card.temperature },
+          { label: 'pH',      value: card.pH },
+          { label: 'COMPAT.', value: card.compatibility ? card.compatibility.replace(' Suitable', '') : '–' },
+        ].map(({ label, value }) => (
+          <div key={label} className="bg-[#111A11] rounded-xl py-2 border border-[#1C2A1C]">
+            <p className="text-[9px] font-bold text-green-500 uppercase tracking-wider mb-0.5">{label}</p>
+            <p className="text-xs font-bold text-white leading-tight">{value}</p>
+          </div>
+        ))}
+      </div>
+
+      {card.summary && (
+        <p className="text-[11px] text-gray-400 leading-relaxed line-clamp-2 italic">"{card.summary}"</p>
+      )}
+
+      {!card.hasFullAnalysis && (
+        <NavLink to="/try-new" className="flex items-center gap-1.5 text-[11px] font-bold text-green-500/70 hover:text-green-400 transition-colors">
+          Run Try New Crop for full analysis <ArrowRight className="w-3 h-3" />
+        </NavLink>
+      )}
+    </motion.div>
+  );
+}
+
+// ── Empty state ───────────────────────────────────────────────────────────────
+function EmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center py-16 gap-5 text-center">
+      <div className="w-16 h-16 rounded-2xl bg-[#111A11] border border-[#1C2A1C] flex items-center justify-center">
+        <ImageOff className="w-7 h-7 text-gray-600" />
+      </div>
+      <div>
+        <p className="text-white font-bold text-base mb-1">No field data yet</p>
+        <p className="text-gray-500 text-sm max-w-xs">
+          Register a farm, upload a crop image, or run Try New Crop to populate your dashboard.
+        </p>
+      </div>
+      <div className="flex gap-3 flex-wrap justify-center">
+        <NavLink to="/try-new" className="flex items-center gap-1.5 px-4 py-2 bg-green-500/10 hover:bg-green-500/20 border border-green-500/20 text-green-400 text-xs font-bold rounded-xl transition-all">
+          <Sprout className="w-3.5 h-3.5" /> Try New Crop
+        </NavLink>
+        <NavLink to="/diagnostic" className="flex items-center gap-1.5 px-4 py-2 bg-[#111A11] hover:bg-[#1C2A1C] border border-[#1C2A1C] text-gray-300 text-xs font-bold rounded-xl transition-all">
+          <Activity className="w-3.5 h-3.5" /> Detect Disease
+        </NavLink>
+      </div>
+    </div>
+  );
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────────
+export default function Dashboard() {
+  const { user } = useAuth();
+  const { data: weatherData } = useLiveWeather();
+  const [cards, setCards] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
+
+  const loadCards = useCallback(async (force = false) => {
+    if (!user) { setLoading(false); return; }
+    setLoading(true);
+    setError(false);
+    if (force) clearInsightCache(user.$id);
+    try {
+      const result = await insightService.buildDashboardCards(user.$id, weatherData?.currentTemp ?? null);
+      setCards(result);
+    } catch {
+      setError(true);
+    } finally {
+      setLoading(false);
+    }
+  }, [user, weatherData]);
+
+  useEffect(() => { loadCards(); }, [loadCards]);
+
+  const healthyCount = cards.filter(c => c.healthScore >= 8).length;
+  const threatCards  = cards.filter(c => c.status.color !== 'green');
+  const healthPct    = cards.length > 0 ? Math.round((healthyCount / cards.length) * 100) : null;
+
+  return (
+    <div className="p-6 max-w-7xl mx-auto space-y-6 w-full">
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-black text-white tracking-tight">Farmer Dashboard</h1>
-          <p className="text-gray-400 mt-1">Live field diagnostics and crop telemetry streamed from mobile edge device</p>
+          <p className="text-gray-400 mt-1 text-sm">Live field overview compiled from your farms, images, and analyses</p>
         </div>
-        <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#1C2A1C] text-gray-300 hover:text-white hover:bg-[#111A11] transition-all font-semibold">
-          <FileText className="w-4 h-4" />
-          Generate Daily Report
+        <button
+          onClick={() => loadCards(true)} disabled={loading}
+          className="flex items-center gap-2 px-4 py-2 rounded-xl border border-[#1C2A1C] text-gray-300 hover:text-white hover:bg-[#111A11] transition-all font-semibold text-sm disabled:opacity-40"
+        >
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
         </button>
       </div>
 
-      {/* Top Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 flex items-center gap-4 shadow-sm shadow-black/20">
-          <div className="bg-[#111A11] p-3 rounded-xl border border-[#1C2A1C]">
-            <ShieldCheck className="w-6 h-6 text-green-500" />
+      {/* Top stats */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {[
+          { icon: ShieldCheck, iconColor: 'text-green-500', label: 'Field Health',    value: loading ? '—' : healthPct != null ? `${healthPct}% Healthy` : 'No data' },
+          { icon: Beaker,      iconColor: 'text-blue-400',  label: 'Crops Tracked',   value: loading ? '—' : `${cards.length} crop${cards.length !== 1 ? 's' : ''}` },
+          { icon: TrendingUp,  iconColor: 'text-orange-400',label: 'Live Temp',        value: weatherData ? `${weatherData.currentTemp}°C` : '—', highlight: true },
+          { icon: AlertTriangle, iconColor: 'text-red-500', label: 'Active Threats',  value: loading ? '—' : threatCards.length > 0 ? `${threatCards.length} Active` : 'None', valueColor: threatCards.length > 0 ? 'text-red-500' : 'text-white' },
+        ].map(({ icon: Icon, iconColor, label, value, highlight, valueColor = 'text-white' }) => (
+          <div key={label} className={`${highlight ? 'bg-[#111A11] border-green-900/50' : 'bg-[#0D150D] border-[#1C2A1C]'} border rounded-2xl p-5 flex items-center gap-4 shadow-sm relative overflow-hidden`}>
+            {highlight && <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none" />}
+            <div className={`${highlight ? 'bg-[#1A251A] border-green-900/50' : 'bg-[#111A11] border-[#1C2A1C]'} p-3 rounded-xl border relative z-10`}>
+              <Icon className={`w-6 h-6 ${iconColor}`} />
+            </div>
+            <div className="relative z-10">
+              <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">{label}</div>
+              <div className={`text-2xl font-bold ${valueColor}`}>{value}</div>
+            </div>
           </div>
-          <div>
-            <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Crops Index</div>
-            <div className="text-2xl font-bold text-white">94% Healthy</div>
-          </div>
-        </div>
-
-        <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 flex items-center gap-4 shadow-sm shadow-black/20">
-          <div className="bg-[#111A11] p-3 rounded-xl border border-[#1C2A1C]">
-            <Beaker className="w-6 h-6 text-blue-400" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Soil Moisture</div>
-            <div className="text-2xl font-bold text-white">60.8%</div>
-          </div>
-        </div>
-
-        <div className="bg-[#111A11] border border-green-900/50 rounded-2xl p-5 flex items-center gap-4 shadow-[0_0_15px_rgba(34,197,94,0.05)] relative overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-br from-green-500/5 to-transparent pointer-events-none"></div>
-          <div className="bg-[#1A251A] p-3 rounded-xl border border-green-900/50">
-            <Thermometer className="w-6 h-6 text-orange-400" />
-          </div>
-          <div className="relative z-10">
-            <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Soil Temp</div>
-            <div className="text-2xl font-bold text-white">23.1°C</div>
-          </div>
-        </div>
-
-        <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 flex items-center gap-4 shadow-sm shadow-black/20">
-          <div className="bg-[#1A1515] p-3 rounded-xl border border-red-900/30">
-            <AlertTriangle className="w-6 h-6 text-red-500" />
-          </div>
-          <div>
-            <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Threat Alerts</div>
-            <div className="text-2xl font-bold text-red-500">4 Active</div>
-          </div>
-        </div>
+        ))}
       </div>
 
-      {/* Main Grid Layout */}
+      {/* Main grid */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Left Column: Field Sectors Telemetry */}
+
+        {/* Left — Field overview */}
         <div className="lg:col-span-2 space-y-4">
-          <h2 className="text-lg font-bold text-white mb-2">Field Sectors Telemetry</h2>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Sector A */}
-            <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 shadow-sm shadow-black/20">
-              <h3 className="text-white font-bold mb-1">Sector A (North Tomatoes)</h3>
-              <p className="text-sm font-semibold text-green-500 mb-6">Status: Healthy</p>
-              
-              <div className="flex justify-between text-center">
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Moisture</div>
-                  <div className="text-lg font-bold text-white">68.4%</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Temp</div>
-                  <div className="text-lg font-bold text-white">22.4°C</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">pH</div>
-                  <div className="text-lg font-bold text-white">6.3</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sector B */}
-            <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 shadow-sm shadow-black/20">
-              <h3 className="text-white font-bold mb-1">Sector B (South Potatoes)</h3>
-              <p className="text-sm font-semibold text-orange-400 mb-6">Status: Mild Early Blight Suspicion</p>
-              
-              <div className="flex justify-between text-center">
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Moisture</div>
-                  <div className="text-lg font-bold text-white">42.1%</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Temp</div>
-                  <div className="text-lg font-bold text-white">19°C</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">pH</div>
-                  <div className="text-lg font-bold text-white">5.8</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sector C */}
-            <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 shadow-sm shadow-black/20">
-              <h3 className="text-white font-bold mb-1">Sector C (East Maize)</h3>
-              <p className="text-sm font-semibold text-orange-400 mb-6">Status: Nitrogen Deficient</p>
-              
-              <div className="flex justify-between text-center">
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Moisture</div>
-                  <div className="text-lg font-bold text-white">59.8%</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Temp</div>
-                  <div className="text-lg font-bold text-white">24.7°C</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">pH</div>
-                  <div className="text-lg font-bold text-white">6.6</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Sector D */}
-            <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 shadow-sm shadow-black/20">
-              <h3 className="text-white font-bold mb-1">Sector D (West Peppers)</h3>
-              <p className="text-sm font-semibold text-green-500 mb-6">Status: Healthy</p>
-              
-              <div className="flex justify-between text-center">
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Moisture</div>
-                  <div className="text-lg font-bold text-white">72.7%</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">Temp</div>
-                  <div className="text-lg font-bold text-white">26.3°C</div>
-                </div>
-                <div>
-                  <div className="text-xs font-bold text-green-500 uppercase tracking-wider mb-1">pH</div>
-                  <div className="text-lg font-bold text-white">6.2</div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-
-          {/* Sector A Telemetry Trends placeholder */}
-          <div className="mt-8">
-            <h2 className="text-lg font-bold text-white mb-4">Sector A Telemetry Trends</h2>
-            <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-6 h-48 flex items-end justify-between items-center relative overflow-hidden">
-                <div className="absolute inset-0 flex items-center justify-center opacity-10">
-                    <div className="w-full h-full bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI4MDAiIGhlaWdodD0iMjAwIj48cGF0aCBkPSJNMCAxMDBRMTAwIDUwIDIwMCAxMDBUMzAwIDE1MFQ0MDAgMTAwVDUwMCA1MFQ2MDAgMTAwVDcwMCAxNTBUMDDAgMTAwIiBmaWxsPSJub25lIiBzdHJva2U9IiMyMkM1NUUiIHN0cm9rZS13aWR0aD0iNCIvPjwvc3ZnPg==')] bg-center bg-no-repeat bg-cover"></div>
-                </div>
-                <div className="text-gray-500 font-bold z-10 mx-auto">Graph Visualization Placeholder</div>
-            </div>
-          </div>
+          <h2 className="text-lg font-bold text-white">Field Overview</h2>
+          <AnimatePresence mode="wait">
+            {loading ? (
+              <motion.div key="loader" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl"><ProgressiveLoader /></div>
+              </motion.div>
+            ) : error ? (
+              <motion.div key="error" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#0D150D] border border-red-900/30 rounded-2xl p-8 text-center space-y-4">
+                <AlertTriangle className="w-10 h-10 text-red-500 mx-auto" />
+                <p className="text-white font-bold">Could not load your field data.</p>
+                <p className="text-gray-500 text-sm">Check your connection and try again.</p>
+                <button onClick={() => loadCards(true)} className="px-5 py-2 bg-[#111A11] hover:bg-[#1C2A1C] border border-[#1C2A1C] text-gray-300 hover:text-white text-sm font-bold rounded-xl transition-all flex items-center gap-2 mx-auto">
+                  <RefreshCw className="w-4 h-4" /> Retry
+                </button>
+              </motion.div>
+            ) : cards.length === 0 ? (
+              <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl">
+                <EmptyState />
+              </motion.div>
+            ) : (
+              <motion.div key="cards" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {cards.map(card => <FieldCard key={card.id} card={card} />)}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
 
-        {/* Right Column: Active Crop Threats */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-2 h-2 rounded-full bg-orange-500"></div>
-            <h2 className="text-lg font-bold text-white">Active Crop Threats</h2>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="bg-[#1A1510] border border-orange-900/30 rounded-xl p-4 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-white mb-1">Sector B (South Potatoes)</h4>
-                <p className="text-sm text-gray-400 leading-snug">Low Soil Moisture (Optimal 50-70%)</p>
-              </div>
+        {/* Right — Threats + Recommendations */}
+        <div className="space-y-6">
+          <div>
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-2 h-2 rounded-full bg-orange-500" />
+              <h2 className="text-lg font-bold text-white">Active Crop Threats</h2>
             </div>
-
-            <div className="bg-[#1A1510] border border-orange-900/30 rounded-xl p-4 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-white mb-1">Sector B (South Potatoes)</h4>
-                <p className="text-sm text-gray-400 leading-snug">Possible early-stage leaf lesions detected in camera 3</p>
+            {loading ? (
+              <div className="space-y-3">
+                {[1, 2].map(i => <div key={i} className="bg-[#0D150D] border border-[#1C2A1C] rounded-xl h-16 animate-pulse" />)}
               </div>
-            </div>
-
-            <div className="bg-[#1A1510] border border-orange-900/30 rounded-xl p-4 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-white mb-1">Sector C (East Maize)</h4>
-                <p className="text-sm text-gray-400 leading-snug">Low Nitrogen Level (Optimal: ~180 mg/kg)</p>
+            ) : threatCards.length === 0 ? (
+              <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-xl p-5 flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-green-500 shrink-0" />
+                <p className="text-sm text-gray-400 font-medium">No active threats detected.</p>
               </div>
-            </div>
-
-            <div className="bg-[#1A1510] border border-orange-900/30 rounded-xl p-4 flex gap-3">
-              <AlertTriangle className="w-5 h-5 text-orange-500 shrink-0 mt-0.5" />
-              <div>
-                <h4 className="text-sm font-bold text-white mb-1">Sector C (East Maize)</h4>
-                <p className="text-sm text-gray-400 leading-snug">Foliage showing light yellowing streaking</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-8">
-            <h2 className="text-lg font-bold text-white mb-4">Daily Farm Suggestions</h2>
-            <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 shadow-sm">
-                <div className="space-y-4">
-                    <div className="flex gap-3 items-start">
-                        <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-xs font-bold text-green-500 shrink-0">1</div>
-                        <p className="text-sm text-gray-300">Increase irrigation in Sector B to address low soil moisture.</p>
+            ) : (
+              <div className="space-y-3">
+                {threatCards.map(card => (
+                  <div key={card.id} className="bg-[#1A1510] border border-orange-900/30 rounded-xl p-4 flex gap-3">
+                    <AlertTriangle className="w-4 h-4 text-orange-500 shrink-0 mt-0.5" />
+                    <div>
+                      <h4 className="text-sm font-bold text-white mb-0.5">{card.crop}</h4>
+                      <p className="text-xs text-gray-400 leading-snug">{card.status.label}</p>
                     </div>
-                    <div className="flex gap-3 items-start">
-                        <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-xs font-bold text-green-500 shrink-0">2</div>
-                        <p className="text-sm text-gray-300">Schedule nitrogen top-dressing for Sector C within 48 hours.</p>
-                    </div>
-                </div>
-            </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
+
+          {!loading && cards.some(c => c.recommendations?.length > 0) && (
+            <div>
+              <h2 className="text-lg font-bold text-white mb-3">Field Recommendations</h2>
+              <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 space-y-4">
+                {cards
+                  .filter(c => c.recommendations?.length > 0)
+                  .flatMap(c => c.recommendations.map((r, i) => ({ crop: c.crop, text: r, key: `${c.id}-${i}` })))
+                  .slice(0, 4)
+                  .map((item, idx) => (
+                    <div key={item.key} className="flex gap-3 items-start">
+                      <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-xs font-bold text-green-500 shrink-0">{idx + 1}</div>
+                      <div>
+                        <span className="text-[10px] font-bold text-green-500 uppercase">{item.crop} · </span>
+                        <span className="text-sm text-gray-300">{item.text}</span>
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            </div>
+          )}
+
+          {!loading && cards.length === 0 && (
+            <div>
+              <h2 className="text-lg font-bold text-white mb-3">Get Started</h2>
+              <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 space-y-3">
+                {[
+                  { to: '/try-new',          icon: Sprout,   label: 'Check crop suitability', color: 'text-green-400' },
+                  { to: '/diagnostic',       icon: Activity, label: 'Upload a crop image',    color: 'text-blue-400' },
+                  { to: '/nutrient-analysis',icon: Beaker,   label: 'Run nutrition analysis', color: 'text-purple-400' },
+                ].map(({ to, icon: Icon, label, color }) => (
+                  <NavLink key={to} to={to} className="flex items-center gap-3 py-2 hover:opacity-80 transition-opacity">
+                    <Icon className={`w-4 h-4 shrink-0 ${color}`} />
+                    <span className="text-sm text-gray-300 font-medium">{label}</span>
+                    <ArrowRight className="w-3.5 h-3.5 text-gray-600 ml-auto" />
+                  </NavLink>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
-
       </div>
     </div>
   );
-};
-
-export default Dashboard;
+}

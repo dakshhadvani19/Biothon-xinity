@@ -101,8 +101,10 @@ const DiagnosticCapture = () => {
         const uploadedFile = await imageService.uploadCropImage(selectedFile, user.$id);
         const fileId = uploadedFile.$id;
         
-        // Save to UserImages table (URL is generated fresh from file_id — no need to store it)
-        await imageService.saveUserImageRecord(user.$id, fileId);
+        // Save to UserImages table — extract crop name from disease string for dashboard linking
+        const cropName = data.disease
+          .split('___')[0].replace(/_/g, ' ').replace(/\(.*?\)/g, '').trim();
+        await imageService.saveUserImageRecord(user.$id, fileId, cropName);
         
         // Optional: Save to Diagnostic Logs
         await diagnosticService.saveDiagnosticLog(

@@ -8,9 +8,12 @@ import {
 } from 'lucide-react';
 import { getFarmerCoordinates, getSmartWeatherUpdates } from '../services/weatherService';
 import { aiService } from '../services/aiService';
+import { suitabilityService } from '../services/suitabilityService';
+import { useAuth } from '../context/AuthContext';
 import HindiVoicePlayer from '../components/HindiVoicePlayer';
 
 export default function TryNewCrop() {
+  const { user } = useAuth();
   // Form inputs
   const [cropName, setCropName] = useState('');
   const [soilType, setSoilType] = useState('Black Soil');
@@ -104,7 +107,12 @@ export default function TryNewCrop() {
       }
 
       setAnalysisResult(result);
-      
+
+      // Fire-and-forget save to DB — powers the dashboard cards
+      if (user) {
+        suitabilityService.saveResult(user.$id, cropName, finalSoil, result).catch(() => {});
+      }
+
       // Initialize inline chat with a greeting
       setChatMessages([
         {
