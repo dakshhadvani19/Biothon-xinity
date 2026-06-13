@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermometer, Wind, CloudRain, Volume2, Plus, Search, Clock, MessageCircle, AlertTriangle, X } from 'lucide-react';
+import { MessageSquare, Send, Sparkles, Trash2, Sprout, ArrowRight, Leaf, Thermometer, Wind, CloudRain, Volume2, Plus, Search, Clock, MessageCircle, AlertTriangle, X, Mic, MicOff, Settings } from 'lucide-react';
 import { aiService } from '../services/aiService';
 import { farmService } from '../services/farmService';
 import { chatService, serializeMessages, deserializeMessages, formatChatDate } from '../services/chatService';
@@ -65,12 +65,22 @@ function HighlightedTitle({ title, query }) {
   );
 }
 
-const WELCOME_MSG = (text) => ({ role: 'assistant', content: text, content_hi: '', isWelcome: true });
+const WELCOME_MSG = (text) => ({ role: 'assistant', content: text, content_hi: '', content_te: '', isWelcome: true });
 
 export default function Chat() {
   const { user } = useAuth();
   const { data: weatherData } = useLiveWeather();
-  const { speak } = useSpeech();
+  const { 
+    speak, 
+    stopSpeech, 
+    elevenLabsKey, 
+    isElevenLabsActive, 
+    elevenLabsAgentId,
+    saveElevenLabsKey, 
+    toggleElevenLabs,
+    saveElevenLabsAgentId
+  } = useSpeech();
+
   const [farms, setFarms] = useState([]);
   const [farmsLoaded, setFarmsLoaded] = useState(false);
 
@@ -80,12 +90,42 @@ export default function Chat() {
   const [searchQuery, setSearchQuery] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState(null);
 
+  // ElevenLabs Configuration Modal State
+  const [isElevenLabsOpen, setIsElevenLabsOpen] = useState(false);
+  const [tempKey, setTempKey] = useState(elevenLabsKey || '');
+  const [tempAgentId, setTempAgentId] = useState(elevenLabsAgentId || '');
+
+  // Speech Recognition (STT) State
+  const [isRecording, setIsRecording] = useState(false);
+  const [listeningLang, setListeningLang] = useState('hi'); // Default to Hindi
+  const recognitionRef = useRef(null);
+
   const [messages, setMessages] = useState([
     WELCOME_MSG("Welcome to AgriShield AI Chat Advisor!\n\nI'm loading your farm data right now. Once ready, I can give you personalized advice based on your specific crops, soil types, and current weather conditions.\n\nAsk me anything about your farm!")
   ]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const chatEndRef = useRef(null);
+
+  // Keep tempKey & tempAgentId in sync with SpeechContext
+  useEffect(() => {
+    setTempKey(elevenLabsKey || '');
+  }, [elevenLabsKey]);
+
+  useEffect(() => {
+    setTempAgentId(elevenLabsAgentId || '');
+  }, [elevenLabsAgentId]);
+
+  // Load ElevenLabs Conversational AI Widget script dynamically
+  useEffect(() => {
+    if (elevenLabsAgentId) {
+      const script = document.createElement('script');
+      script.src = "https://elevenlabs.io/convai-widget/index.js";
+      script.async = true;
+      script.type = "text/javascript";
+      document.body.appendChild(script);
+    }
+  }, [elevenLabsAgentId]);
 
   // ── Load farm data ───────────────────────────────────────────────────────
   useEffect(() => {
@@ -104,8 +144,6 @@ export default function Chat() {
     }
     if (weatherData) text += `Current weather: **${weatherData.currentTemp}°C**, ${weatherData.condition}.\n`;
     text += "\nAsk me anything about your crops, soil, irrigation, pests, or fertilizers!";
-    // Only overwrite if no real conversation has started — guards against
-    // weatherData arriving late (live fetch) and wiping an active chat.
     setMessages(prev => prev.some(m => !m.isWelcome) ? prev : [WELCOME_MSG(text)]);
   }, [farmsLoaded, weatherData]);
 
@@ -163,6 +201,9 @@ export default function Chat() {
     if (!messageText.trim() || isLoading) return;
     if (!textToSend) setInput('');
 
+    // Stop recording if active
+    if (isRecording) stopSpeechToText();
+
     const updatedMessages = [...messages, { role: 'user', content: messageText }];
     setMessages(updatedMessages);
     setIsLoading(true);
@@ -173,10 +214,13 @@ export default function Chat() {
       const response = await aiService.sendChatMessage(updatedMessages, null, ctx.farms, ctx.weather, ctx.userName);
       let contentEn = response.content_en || response.content || 'No response received.';
       let contentHi = response.content_hi || '';
+      let contentTe = response.content_te || '';
+      
       if (typeof contentEn !== 'string') contentEn = Array.isArray(contentEn) ? contentEn.join('\n') : JSON.stringify(contentEn);
       if (typeof contentHi !== 'string') contentHi = Array.isArray(contentHi) ? contentHi.join('\n') : JSON.stringify(contentHi);
+      if (typeof contentTe !== 'string') contentTe = Array.isArray(contentTe) ? contentTe.join('\n') : JSON.stringify(contentTe);
 
-      const aiMsg = { role: 'assistant', content: contentEn, content_hi: contentHi };
+      const aiMsg = { role: 'assistant', content: contentEn, content_hi: contentHi, content_te: contentTe };
       const fullMessages = [...updatedMessages, aiMsg];
       setMessages(fullMessages);
 
@@ -231,6 +275,64 @@ export default function Chat() {
     setChatList(prev => prev.filter(c => c.$id !== deleteConfirmId));
     if (currentChatId === deleteConfirmId) handleNewChat();
     setDeleteConfirmId(null);
+  };
+
+  // ── Speech-to-Text Recognition ───────────────────────────────────────────
+  const startSpeechToText = () => {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Please try Chrome or Edge.");
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
+
+    const langMap = {
+      'en': 'en-US',
+      'hi': 'hi-IN',
+      'te': 'te-IN'
+    };
+    recognition.lang = langMap[listeningLang] || 'hi-IN';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+
+    recognition.onstart = () => {
+      setIsRecording(true);
+    };
+
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      if (text) {
+        setInput(prev => prev + (prev ? ' ' : '') + text);
+      }
+    };
+
+    recognition.onerror = (event) => {
+      console.error("Speech recognition error:", event.error);
+      setIsRecording(false);
+    };
+
+    recognition.onend = () => {
+      setIsRecording(false);
+    };
+
+    recognition.start();
+  };
+
+  const stopSpeechToText = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsRecording(false);
+  };
+
+  const toggleRecording = () => {
+    if (isRecording) {
+      stopSpeechToText();
+    } else {
+      startSpeechToText();
+    }
   };
 
   // ── Search filter ────────────────────────────────────────────────────────
@@ -357,9 +459,19 @@ export default function Chat() {
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            {/* Voice Settings Button */}
+            <button
+              onClick={() => setIsElevenLabsOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 bg-[#111A11] hover:bg-[#1C2A1C] border border-[#1C2A1C] hover:border-green-800 rounded-xl text-xs font-bold text-gray-400 hover:text-green-400 transition-all active:scale-95 shadow-sm"
+              title="ElevenLabs Settings"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              Voice Settings
+            </button>
+
             <div className="flex items-center gap-1.5">
               {farmsLoaded && (
-                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${farms.length > 0 ? 'bg-green-50 text-green-700 border-green-200' : 'bg-gray-50 text-gray-500 border-gray-200'}`}>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold border ${farms.length > 0 ? 'bg-green-50/10 text-green-400 border-green-950/30' : 'bg-gray-950/40 text-gray-500 border-gray-900'}`}>
                   {farms.length > 0 ? `${farms.length} farm${farms.length > 1 ? 's' : ''} loaded` : 'No farms'}
                 </span>
               )}
@@ -395,15 +507,42 @@ export default function Chat() {
                     ) : (
                       <>
                         <FormattedMessage content={msg.content} />
-                        {msg.content_hi && !msg.isWelcome && (
-                          <button
-                            onClick={() => speak(msg.content_hi, 'AI सलाह')}
-                            className="mt-2.5 flex items-center gap-1.5 text-xs font-bold text-green-600 hover:text-green-700 hover:bg-green-50 px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-green-200/50"
-                            title="हिंदी में सुनें"
-                          >
-                            <Volume2 className="w-3.5 h-3.5" />
-                            हिंदी में सुनें
-                          </button>
+                        {!msg.isWelcome && (msg.content_hi || msg.content_te) && (
+                          <div className="mt-2.5 flex flex-wrap gap-2 pt-2 border-t border-[#1C2A1C]/50">
+                            {/* Play English */}
+                            <button
+                              onClick={() => speak(msg.content, 'en', 'English Response')}
+                              className="flex items-center gap-1.5 text-xs font-bold text-blue-400 hover:text-blue-300 bg-[#1C2A1C] hover:bg-[#253825] px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-[#2A3F2A]/30"
+                              title="Listen in English"
+                            >
+                              <Volume2 className="w-3.5 h-3.5" />
+                              English
+                            </button>
+                            
+                            {/* Play Hindi */}
+                            {msg.content_hi && (
+                              <button
+                                onClick={() => speak(msg.content_hi, 'hi', 'हिंदी सलाह')}
+                                className="flex items-center gap-1.5 text-xs font-bold text-green-400 hover:text-green-300 bg-[#1C2A1C] hover:bg-[#253825] px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-[#2A3F2A]/30"
+                                title="हिंदी में सुनें"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                                हिंदी
+                              </button>
+                            )}
+
+                            {/* Play Telugu */}
+                            {msg.content_te && (
+                              <button
+                                onClick={() => speak(msg.content_te, 'te', 'తెలుగు సలహా')}
+                                className="flex items-center gap-1.5 text-xs font-bold text-amber-400 hover:text-amber-300 bg-[#1C2A1C] hover:bg-[#253825] px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-[#2A3F2A]/30"
+                                title="తెలుగులో వినండి"
+                              >
+                                <Volume2 className="w-3.5 h-3.5" />
+                                తెలుగు
+                              </button>
+                            )}
+                          </div>
                         )}
                       </>
                     )}
@@ -418,7 +557,7 @@ export default function Chat() {
                 <div className="w-9 h-9 rounded-full bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center text-white shrink-0 shadow-sm border border-green-400">
                   <Leaf className="w-4 h-4" />
                 </div>
-                <div className="bg-gray-50 border border-gray-150 rounded-2xl rounded-bl-none px-5 py-3.5 flex items-center gap-2 shadow-sm">
+                <div className="bg-[#111A11] border border-[#1C2A1C] rounded-2xl rounded-bl-none px-5 py-3.5 flex items-center gap-2 shadow-sm">
                   <div className="flex gap-1.5">
                     <span className="w-2 h-2 bg-green-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
                     <span className="w-2 h-2 bg-green-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
@@ -457,13 +596,48 @@ export default function Chat() {
           <div className="p-4 bg-[#0D150D] border-t border-[#1C2A1C] shrink-0">
             <form
               onSubmit={(e) => { e.preventDefault(); handleSendMessage(); }}
-              className="flex gap-3 bg-[#111A11] border border-[#1C2A1C] rounded-2xl p-1.5 focus-within:ring-1 focus-within:ring-green-500 transition-all shadow-inner"
+              className="flex items-center gap-3 bg-[#111A11] border border-[#1C2A1C] rounded-2xl p-1.5 focus-within:ring-1 focus-within:ring-green-500 transition-all shadow-inner"
             >
+              {/* Mic STT Button */}
+              <button
+                type="button"
+                onClick={toggleRecording}
+                className={`p-3 rounded-xl transition-all active:scale-95 shrink-0 flex items-center justify-center relative ${
+                  isRecording 
+                    ? 'bg-red-500/20 text-red-400 border border-red-500/40' 
+                    : 'bg-[#1C2A1C] hover:bg-[#243624] text-gray-400 hover:text-green-400 border border-transparent'
+                }`}
+                title={isRecording ? "Stop listening" : "Speak to AI"}
+              >
+                {isRecording ? <MicOff className="w-4.5 h-4.5" /> : <Mic className="w-4.5 h-4.5" />}
+                {isRecording && (
+                  <span className="absolute -inset-1 rounded-xl bg-red-500/10 animate-ping pointer-events-none" />
+                )}
+              </button>
+
+              {/* Listening language selector */}
+              <div className="flex bg-[#0D150D] border border-[#1C2A1C] rounded-lg p-0.5 shrink-0">
+                {['en', 'hi', 'te'].map(l => (
+                  <button
+                    key={l}
+                    type="button"
+                    onClick={() => setListeningLang(l)}
+                    className={`px-2.5 py-1 text-[10px] font-extrabold uppercase rounded-md transition-all ${
+                      listeningLang === l 
+                        ? 'bg-green-500/20 text-green-400 border border-green-500/30' 
+                        : 'text-gray-500 hover:text-gray-300'
+                    }`}
+                  >
+                    {l}
+                  </button>
+                ))}
+              </div>
+
               <input
                 type="text"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
-                placeholder={farms.length > 0 ? `Ask about your ${farms[0]?.crop} or any crop challenge...` : 'Ask about crops, soil, pests, irrigation...'}
+                placeholder={isRecording ? "Listening..." : farms.length > 0 ? `Ask about your ${farms[0]?.crop} or any crop challenge...` : 'Ask about crops, soil, pests, irrigation...'}
                 className="flex-1 bg-transparent border-none outline-none px-4 py-3 text-sm text-white placeholder-gray-500"
               />
               <button
@@ -477,6 +651,115 @@ export default function Chat() {
           </div>
         </div>
       </div>
+
+      {/* ── ElevenLabs Settings Modal ── */}
+      <AnimatePresence>
+        {isElevenLabsOpen && (
+          <motion.div
+            key="elevenlabs-overlay"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+            onClick={() => setIsElevenLabsOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.92, y: 8 }}
+              transition={{ duration: 0.18, ease: 'easeOut' }}
+              onClick={e => e.stopPropagation()}
+              className="w-[360px] bg-[#0D150D] border border-[#1C2A1C] rounded-2xl overflow-hidden shadow-2xl animate-fade-in"
+            >
+              {/* Voice accent bar */}
+              <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-600" />
+
+              <div className="p-5">
+                {/* Icon + heading */}
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-10 h-10 rounded-xl bg-green-500/10 border border-green-500/20 flex items-center justify-center shrink-0">
+                    <Sparkles className="w-5 h-5 text-green-400" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-white">ElevenLabs AI Assistant</h3>
+                    <p className="text-[11px] text-gray-500 mt-0.5">Premium Female Voice (Bella)</p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  {/* Toggle */}
+                  <div className="flex items-center justify-between bg-[#111A11] border border-[#1C2A1C] rounded-xl px-4 py-3">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-bold text-white">Enable ElevenLabs Voice</span>
+                      <span className="text-[10px] text-gray-500">Uses high-quality multilingual model</span>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={isElevenLabsActive}
+                        onChange={(e) => toggleElevenLabs(e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-[#1C2A1C] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-gray-400 after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600 peer-checked:after:bg-white"></div>
+                    </label>
+                  </div>
+
+                  {/* API Key */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 px-1">ElevenLabs API Key</label>
+                    <input
+                      type="password"
+                      value={tempKey}
+                      onChange={(e) => setTempKey(e.target.value)}
+                      placeholder="Paste your ElevenLabs key..."
+                      className="w-full bg-[#111A11] border border-[#1C2A1C] focus:border-green-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition-all"
+                    />
+                    <p className="text-[10px] text-gray-500 px-1">
+                      If left blank, it will try the server's environment key or fall back to local voice.
+                    </p>
+                  </div>
+
+                  {/* Agent ID */}
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-400 px-1">ElevenLabs Conversational Agent ID</label>
+                    <input
+                      type="text"
+                      value={tempAgentId}
+                      onChange={(e) => setTempAgentId(e.target.value)}
+                      placeholder="e.g. 21m00Tcm4TlvDq8ikWAM"
+                      className="w-full bg-[#111A11] border border-[#1C2A1C] focus:border-green-800 rounded-xl px-3.5 py-2.5 text-xs text-white placeholder-gray-600 outline-none transition-all"
+                    />
+                    <p className="text-[10px] text-gray-500 px-1">
+                      Add your Agent ID from <a href="https://elevenlabs.io/app/agents" target="_blank" rel="noreferrer" className="text-green-500 hover:underline">ElevenLabs Agents</a> to display the live widget.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Actions */}
+                <div className="flex gap-2.5 mt-6">
+                  <button
+                    onClick={() => setIsElevenLabsOpen(false)}
+                    className="flex-1 px-4 py-2.5 text-xs font-bold text-gray-300 bg-[#1C2A1C] hover:bg-[#243624] border border-[#2A3A2A] rounded-xl transition-all active:scale-95"
+                  >
+                    Close
+                  </button>
+                  <button
+                    onClick={() => {
+                      saveElevenLabsKey(tempKey);
+                      saveElevenLabsAgentId(tempAgentId);
+                      setIsElevenLabsOpen(false);
+                    }}
+                    className="flex-1 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 rounded-xl transition-all active:scale-95 shadow-md flex items-center justify-center gap-1.5"
+                  >
+                    Save Settings
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Delete Confirmation Modal ── */}
       <AnimatePresence>
@@ -544,6 +827,13 @@ export default function Chat() {
           );
         })()}
       </AnimatePresence>
+
+      {/* ── ElevenLabs Conversational Widget ── */}
+      {elevenLabsAgentId && (
+        <div className="fixed bottom-6 right-6 z-50 shadow-2xl">
+          <elevenlabs-convai agent-id={elevenLabsAgentId}></elevenlabs-convai>
+        </div>
+      )}
     </div>
   );
 }

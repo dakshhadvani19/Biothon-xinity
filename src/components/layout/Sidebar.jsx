@@ -11,10 +11,11 @@ import {
   Users,
   User,
   Book,
-  Leaf
+  Leaf,
+  Mic
 } from 'lucide-react';
 
-const Sidebar = () => {
+const Sidebar = ({ onOpenAssistant }) => {
   const mainLinks = [
     { name: 'Dashboard', path: '/', icon: LayoutGrid },
     { name: 'Disease Detection', path: '/diagnostic', icon: FileText },
@@ -86,8 +87,22 @@ const Sidebar = () => {
         ))}
       </nav>
 
+      {/* Voice Assistant Button */}
+      <div className="px-4 mb-4">
+        <button 
+          onClick={onOpenAssistant}
+          className="w-full flex items-center justify-center gap-3 px-4 py-3 rounded-xl bg-gradient-to-r from-green-500/10 to-emerald-500/20 border border-green-500/30 hover:border-green-500/60 hover:from-green-500/20 hover:to-emerald-500/30 text-green-400 hover:text-green-300 font-bold text-sm shadow-[0_0_15px_rgba(34,197,94,0.05)] transition-all duration-300 group active:scale-[0.98]"
+        >
+          <div className="relative">
+            <Mic className="w-5 h-5 shrink-0" strokeWidth={2.5} />
+            <div className="absolute inset-0 bg-green-500 rounded-full animate-ping opacity-30 pointer-events-none" />
+          </div>
+          Voice AI Assistant
+        </button>
+      </div>
+
       {/* Bottom Area (e.g. system status or version) */}
-      <div className="p-6 mt-auto">
+      <div className="p-6">
         <div className="flex items-center gap-2 text-[10px] font-bold text-gray-600 uppercase tracking-wider">
           <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></div>
           Mobile Server Stream Active

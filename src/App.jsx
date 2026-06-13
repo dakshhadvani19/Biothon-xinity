@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import { motion } from 'framer-motion';
@@ -20,6 +20,8 @@ import useLiveWeather from './hooks/useLiveWeather';
 import { Agentation } from "agentation";
 import { SpeechProvider } from './context/SpeechContext';
 import SpeechPlayer from './components/SpeechPlayer';
+import ElevenLabsAssistant from './components/ElevenLabsAssistant';
+import VoiceAssistantModal from './components/VoiceAssistantModal';
 
 
 // Handles redirect back to the page the user was on before Google OAuth
@@ -40,12 +42,14 @@ const PostAuthRedirect = () => {
 };
 
 const App = () => {
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   return (
     <Router>
       <SpeechProvider>
       <AuthProvider>
       <div className="flex h-screen bg-[#0A0F0A] overflow-hidden font-sans text-gray-100">
-        <Sidebar />
+        <Sidebar onOpenAssistant={() => setIsModalOpen(true)} />
 
         <main className="flex-1 flex flex-col relative overflow-y-auto custom-scrollbar">
             <PostAuthRedirect />
@@ -69,6 +73,9 @@ const App = () => {
               <Agentation endpoint="http://localhost:4747" onSessionCreated={(sessionId) => console.log("Agentation Session:", sessionId)} />
             )}
         </main>
+        
+        <ElevenLabsAssistant />
+        <VoiceAssistantModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       </div>
       </AuthProvider>
       </SpeechProvider>
