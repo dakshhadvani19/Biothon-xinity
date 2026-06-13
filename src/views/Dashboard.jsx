@@ -132,11 +132,19 @@ function FieldCard({ card }) {
         {[
           { label: 'TEMP',    value: card.temperature },
           { label: 'pH',      value: card.pH },
-          { label: 'COMPAT.', value: card.compatibility ? card.compatibility.replace(' Suitable', '') : '–' },
-        ].map(({ label, value }) => (
+          { label: 'COMPAT.', value: card.compatibility ? card.compatibility.replace(' Suitable', '') : '–', loading: card.loadingCompatibility },
+        ].map(({ label, value, loading }) => (
           <div key={label} className="bg-[#111A11] rounded-xl py-2 border border-[#1C2A1C]">
             <p className="text-[9px] font-bold text-green-500 uppercase tracking-wider mb-0.5">{label}</p>
-            <p className="text-xs font-bold text-white leading-tight">{value}</p>
+            {loading ? (
+              <div className="flex items-center justify-center gap-0.5 h-[18px]">
+                {[0, 150, 300].map(d => (
+                  <div key={d} className="w-1 h-1 rounded-full bg-green-500/60 animate-bounce" style={{ animationDelay: `${d}ms` }} />
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs font-bold text-white leading-tight">{value}</p>
+            )}
           </div>
         ))}
       </div>
@@ -193,7 +201,11 @@ export default function Dashboard() {
     setError(false);
     if (force) clearInsightCache(user.$id);
     try {
-      const result = await insightService.buildDashboardCards(user.$id, weatherData?.currentTemp ?? null);
+      const result = await insightService.buildDashboardCards(user.$id, {
+        currentTemp: weatherData?.currentTemp ?? null,
+        condition: weatherData?.condition ?? 'Unknown',
+        onCardUpdate: (updated) => setCards(prev => prev.map(c => c.id === updated.id ? updated : c)),
+      });
       setCards(result);
     } catch {
       setError(true);
@@ -204,9 +216,9 @@ export default function Dashboard() {
 
   useEffect(() => { loadCards(); }, [loadCards]);
 
-  const healthyCount = cards.filter(c => c.healthScore >= 8).length;
   const threatCards  = cards.filter(c => c.status.color !== 'green');
-  const healthPct    = cards.length > 0 ? Math.round((healthyCount / cards.length) * 100) : null;
+  const avgHealthScore = cards.length > 0 ? cards.reduce((sum, c) => sum + c.healthScore, 0) / cards.length : null;
+  const healthPct      = avgHealthScore != null ? Math.round((avgHealthScore / 10) * 100) : null;
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6 w-full">

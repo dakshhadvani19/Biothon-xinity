@@ -21,6 +21,8 @@ export const suitabilityService = {
             weather_analysis: (result.weather_analysis || '').slice(0, 2000),
             soil_analysis: (result.soil_analysis || '').slice(0, 2000),
             recommendations: (result.recommendations || []).slice(0, 10),
+            temp_score: result.sub_scores?.temperature?.score ?? 0,
+            soil_score: result.sub_scores?.soil?.score ?? 0,
             updated_at,
         };
 
