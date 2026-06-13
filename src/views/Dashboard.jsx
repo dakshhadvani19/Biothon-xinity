@@ -189,13 +189,14 @@ function EmptyState() {
 
 // ── Dashboard ─────────────────────────────────────────────────────────────────
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { data: weatherData, loading: weatherLoading } = useLiveWeather();
   const [cards, setCards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
 
   const loadCards = useCallback(async (force = false) => {
+    if (authLoading) return;
     if (!user) { setLoading(false); return; }
     setLoading(true);
     setError(false);
@@ -212,7 +213,7 @@ export default function Dashboard() {
     } finally {
       setLoading(false);
     }
-  }, [user, weatherData]);
+  }, [user, weatherData, authLoading]);
 
   useEffect(() => { loadCards(); }, [loadCards]);
 
@@ -220,7 +221,7 @@ export default function Dashboard() {
   const avgHealthScore = cards.length > 0 ? cards.reduce((sum, c) => sum + c.healthScore, 0) / cards.length : null;
   const healthPct = avgHealthScore != null ? Math.round((avgHealthScore / 10) * 100) : null;
 
-  const isInitialLoad = (loading || weatherLoading) && cards.length === 0 && !error;
+  const isInitialLoad = (authLoading || loading || weatherLoading) && cards.length === 0 && !error;
 
   if (isInitialLoad) {
     return (
