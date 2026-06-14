@@ -60,6 +60,38 @@ function ProgressiveLoader() {
   );
 }
 
+// ── Graph loader ──────────────────────────────────────────────────────────────
+function GraphLoader() {
+  return (
+    <div className="flex flex-col items-center justify-center w-full min-h-[300px] bg-[#0D150D] border border-[#1C2A1C] rounded-2xl relative overflow-hidden">
+      {/* Background grid lines for graph feel */}
+      <div className="absolute inset-0 flex flex-col justify-between p-6 opacity-5 pointer-events-none">
+         <div className="border-b border-green-500 w-full" />
+         <div className="border-b border-green-500 w-full" />
+         <div className="border-b border-green-500 w-full" />
+         <div className="border-b border-green-500 w-full" />
+      </div>
+      
+      {/* Professional Circular Ring Loader */}
+      <div className="relative flex items-center justify-center">
+        {/* Outer pulsing ring */}
+        <div className="absolute w-24 h-24 border-2 border-green-500/20 rounded-full animate-ping" style={{ animationDuration: '3s' }} />
+        
+        {/* Spinning gradient ring */}
+        <div className="w-16 h-16 rounded-full border-[3px] border-transparent border-t-green-400 border-l-emerald-500/80 animate-spin" style={{ animationDuration: '1s' }} />
+        
+        {/* Center icon */}
+        <Activity className="absolute w-6 h-6 text-green-400 animate-pulse" />
+      </div>
+      
+      <div className="mt-8 text-center space-y-1 relative z-10">
+         <p className="text-sm font-bold text-white tracking-wide">Synthesizing Telemetry...</p>
+         <p className="text-xs text-gray-500 font-medium">Aggregating hourly weather models</p>
+      </div>
+    </div>
+  );
+}
+
 // ── Score ring ────────────────────────────────────────────────────────────────
 function ScoreRing({ score }) {
   const r = 16;
@@ -390,16 +422,20 @@ export default function Dashboard() {
       </div>
 
       {/* Telemetry Trends Section */}
-      {!loading && cards.length > 0 && (
+      {cards.length > 0 && (
         <div className="pt-6 border-t border-[#1C2A1C] space-y-6">
           <h2 className="text-xl font-black text-white">Your Farms Crop Growth Tracking</h2>
           
-          {!weatherData?.fullHourlyData || weatherLoading ? (
-            <div className="flex items-center justify-center bg-[#0D150D] border border-[#1C2A1C] rounded-2xl w-full min-h-[300px]">
-              <ProgressiveLoader />
-            </div>
+          {!weatherData?.fullHourlyData ? (
+            <GraphLoader />
           ) : (
-            <>
+            <div className="relative">
+              {(weatherLoading || loading) && (
+                 <div className="absolute -top-12 right-0 flex items-center gap-2 px-3 py-1.5 bg-green-900/40 border border-green-500/30 rounded-full backdrop-blur-md z-10">
+                   <div className="w-3 h-3 rounded-full border-2 border-green-400 border-t-transparent animate-spin" />
+                   <span className="text-[10px] font-bold text-green-300 tracking-wider">SYNCING</span>
+                 </div>
+              )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <TelemetryChart cropName={cards[0].crop} fullHourlyData={weatherData.fullHourlyData} />
                 
@@ -439,7 +475,7 @@ export default function Dashboard() {
                     </button>
                  </div>
               )}
-            </>
+            </div>
           )}
         </div>
       )}

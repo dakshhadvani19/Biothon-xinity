@@ -67,6 +67,40 @@ function HighlightedTitle({ title, query }) {
 
 const WELCOME_MSG = (text) => ({ role: 'assistant', content: text, content_hi: '', content_te: '', isWelcome: true });
 
+// Formats JSON or Array responses into human-readable Markdown
+const formatAIResponse = (content) => {
+  if (!content) return '';
+  
+  if (typeof content === 'string') {
+    const trimmed = content.trim();
+    if ((trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'))) {
+      try {
+        content = JSON.parse(trimmed);
+      } catch (e) {}
+    }
+  }
+
+  if (Array.isArray(content)) {
+    return content.map(item => formatAIResponse(item)).join('\n\n');
+  }
+
+  if (typeof content === 'object' && content !== null) {
+    let formattedText = '';
+    for (const [key, value] of Object.entries(content)) {
+      const humanKey = key
+        .replace(/_/g, ' ')
+        .replace(/([A-Z])/g, ' $1')
+        .replace(/^./, str => str.toUpperCase())
+        .trim();
+      const humanValue = formatAIResponse(value);
+      formattedText += `**${humanKey}:**\n${humanValue}\n\n`;
+    }
+    return formattedText.trim();
+  }
+
+  return String(content);
+};
+
 export default function Chat() {
   const { user } = useAuth();
   const { data: weatherData } = useLiveWeather();
@@ -212,13 +246,10 @@ export default function Chat() {
 
     try {
       const response = await aiService.sendChatMessage(updatedMessages, null, ctx.farms, ctx.weather, ctx.userName);
-      let contentEn = response.content_en || response.content || 'No response received.';
-      let contentHi = response.content_hi || '';
-      let contentTe = response.content_te || '';
       
-      if (typeof contentEn !== 'string') contentEn = Array.isArray(contentEn) ? contentEn.join('\n') : JSON.stringify(contentEn);
-      if (typeof contentHi !== 'string') contentHi = Array.isArray(contentHi) ? contentHi.join('\n') : JSON.stringify(contentHi);
-      if (typeof contentTe !== 'string') contentTe = Array.isArray(contentTe) ? contentTe.join('\n') : JSON.stringify(contentTe);
+      const contentEn = formatAIResponse(response.content_en || response.content) || 'No response received.';
+      const contentHi = formatAIResponse(response.content_hi) || '';
+      const contentTe = formatAIResponse(response.content_te) || '';
 
       const aiMsg = { role: 'assistant', content: contentEn, content_hi: contentHi, content_te: contentTe };
       const fullMessages = [...updatedMessages, aiMsg];

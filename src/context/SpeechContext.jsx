@@ -134,7 +134,16 @@ export function SpeechProvider({ children }) {
     if (!text) return;
     stopSpeech();
 
-    const cleanedText = text.replace(/\*\*/g, '').replace(/[*#_`]/g, '');
+    // Comprehensive text sanitizer for TTS:
+    // 1. Replace underscores with spaces (prevents letter-by-letter reading)
+    // 2. Remove JSON/Code artifacts
+    // 3. Remove Markdown artifacts
+    const cleanedText = text
+      .replace(/_/g, ' ') 
+      .replace(/[{}\[\]":]/g, '')
+      .replace(/\*\*/g, '')
+      .replace(/[*#`]/g, '')
+      .trim();
 
     setCurrentText(text);
     setCurrentLabel(label);
