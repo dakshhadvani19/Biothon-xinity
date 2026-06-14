@@ -1,4 +1,4 @@
-export const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+﻿export const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
 // 1. Geospatial Math (Haversine Formula)
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -122,7 +122,7 @@ export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
 
         let sprayRecommendation = "Safe to apply treatments.";
         if (isExtremeEvent) {
-            sprayRecommendation = "⚠️ SEVERE WEATHER WARNING: Secure farm.";
+            sprayRecommendation = "âš ï¸ SEVERE WEATHER WARNING: Secure farm.";
         } else if (isRainImminent) {
             sprayRecommendation = "Do not spray due to high rain probability.";
         }
@@ -209,85 +209,32 @@ export const getSmartWeatherUpdates = async (forceFresh = false) => {
             temp: 0,
             isRainImminent: false,
             isExtremeEvent: false,
-            alertMessage: null,
             sprayRecommendation: "Weather tracking unavailable. Please check local forecasts."
         };
     }
 };
 
+let sessionCachedInsights = null;
+
 export async function fetchAIInsights(weatherData, userFarms = []) {
     try {
-        // --- 1. FAANG Optimistic Caching Layer (0ms Load Time) ---
-        const cacheKey = 'agrishield_insights_cache';
-        const cacheTimeKey = 'agrishield_insights_time';
-        const cachedStr = localStorage.getItem(cacheKey);
-        const cachedTime = localStorage.getItem(cacheTimeKey);
-        const currentTime = Date.now();
-
-        // Use cached insights if less than 60 minutes old
-        if (cachedStr && cachedTime && (currentTime - parseInt(cachedTime)) < 60 * 60 * 1000) {
-            return JSON.parse(cachedStr);
-        }
-
+        if (sessionCachedInsights) { return sessionCachedInsights; }
         const ML_ENGINE = (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
-        
-        // --- 2. Hard Timeout Layer (Max 4.5 Seconds) ---
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 4500);
-
-        const response = await fetch(`${ML_ENGINE}/api/v1/agronomic-insights`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ data: weatherData, farms: userFarms }),
-            signal: controller.signal
-        });
-        
+        const response = await fetch(${ML_ENGINE}/api/v1/agronomic-insights, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: weatherData, farms: userFarms }), signal: controller.signal });
         clearTimeout(timeoutId);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        
+        if (!response.ok) { throw new Error(HTTP error! status: ); }
         const payload = await response.json();
-        
         let finalInsights;
-        if (payload && (payload.insights_en || payload.insights_hi)) {
-            finalInsights = {
-                insights_en: payload.insights_en || [],
-                insights_hi: payload.insights_hi || [],
-            };
-        } else if (payload && Array.isArray(payload.insights)) {
-            finalInsights = { insights_en: payload.insights, insights_hi: [] };
-        } else {
-            throw new Error("Invalid format");
-        }
-
-        // --- 3. Save to Cache ---
-        localStorage.setItem(cacheKey, JSON.stringify(finalInsights));
-        localStorage.setItem(cacheTimeKey, currentTime.toString());
-
+        if (payload && (payload.insights_en || payload.insights_hi)) { finalInsights = { insights_en: payload.insights_en || [], insights_hi: payload.insights_hi || [] }; } else if (payload && Array.isArray(payload.insights)) { finalInsights = { insights_en: payload.insights, insights_hi: [] }; } else { throw new Error("Invalid format"); }
+        sessionCachedInsights = finalInsights;
         return finalInsights;
     } catch (error) {
-        console.error("🛑 FRONTEND BRIDGE EXCEPTION:", error);
-        
-        // --- 4. Smart Fallbacks on Timeout (< 5 Seconds Guarantee) ---
+        console.error("FRONTEND BRIDGE EXCEPTION:", error);
         let fallbackEn = ["Maintain routine monitoring of soil moisture levels based on local conditions."];
         let fallbackHi = ["स्थानीय परिस्थितियों के आधार पर मिट्टी की नमी के स्तर की नियमित निगरानी बनाए रखें।"];
-        
-        if (weatherData?.currentTemp > 35) {
-            fallbackEn = ["Extreme heat detected. Increase irrigation frequency to prevent heat stress on crops.", "Deploy shade nets if possible for highly vulnerable seedling beds."];
-            fallbackHi = ["अत्यधिक गर्मी का पता चला है। फसलों को गर्मी के तनाव से बचाने के लिए सिंचाई बढ़ाएं।", "अत्यधिक संवेदनशील पौधों के लिए यदि संभव हो तो शेड नेट का उपयोग करें।"];
-        } else if (weatherData?.isRainImminent || weatherData?.condition?.toLowerCase().includes('rain')) {
-            fallbackEn = ["Rain is imminent. Delay any scheduled pesticide or foliar fertilizer spraying to prevent chemical runoff.", "Ensure field drainage channels are clear to prevent waterlogging in root zones."];
-            fallbackHi = ["बारिश की संभावना है। रसायनों को बहने से रोकने के लिए कीटनाशक या उर्वरक के छिड़काव में देरी करें।", "जड़ों में जलभराव को रोकने के लिए खेत के जल निकासी चैनलों को साफ रखें।"];
-        } else if (weatherData?.currentTemp < 10) {
-            fallbackEn = ["Cold temperatures detected. Consider light evening irrigation to protect root zones from frost damage."];
-            fallbackHi = ["ठंडे तापमान का पता चला है। पाले से बचाव के लिए शाम को हल्की सिंचाई करने पर विचार करें।"];
-        }
-
-        return {
-            insights_en: fallbackEn,
-            insights_hi: fallbackHi
-        };
+        if (weatherData?.currentTemp > 35) { fallbackEn = ["Extreme heat detected. Increase irrigation frequency to prevent heat stress on crops.", "Deploy shade nets if possible for highly vulnerable seedling beds."]; fallbackHi = ["अत्यधिक गर्मी का पता चला है। फसलों को गर्मी के तनाव से बचाने के लिए सिंचाई बढ़ाएं।", "अत्यधिक संवेदनशील पौधों के लिए यदि संभव हो तो शेड नेट का उपयोग करें।"]; } else if (weatherData?.isRainImminent || weatherData?.condition?.toLowerCase().includes('rain')) { fallbackEn = ["Rain is imminent. Delay any scheduled pesticide or foliar fertilizer spraying to prevent chemical runoff.", "Ensure field drainage channels are clear to prevent waterlogging in root zones."]; fallbackHi = ["बारिश की संभावना है। रसायनों को बहने से रोकने के लिए कीटनाशक या उर्वरक के छिड़काव में देरी करें।", "जड़ों में जलभराव को रोकने के लिए खेत के जल निकासी चैनलों को साफ रखें।"]; } else if (weatherData?.currentTemp < 10) { fallbackEn = ["Cold temperatures detected. Consider light evening irrigation to protect root zones from frost damage."]; fallbackHi = ["ठंडे तापमान का पता चला है। पाले से बचाव के लिए शाम को हल्की सिंचाई करने पर विचार करें।"]; }
+        return { insights_en: fallbackEn, insights_hi: fallbackHi };
     }
 }
