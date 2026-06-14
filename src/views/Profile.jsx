@@ -5,6 +5,7 @@ import { farmService } from '../services/farmService';
 import { Sprout, Mountain, Trash2, Plus, LogOut, User, Smartphone, ArrowRight } from 'lucide-react';
 import { getFarmerCoordinates } from '../services/weatherService';
 import { aiService } from '../services/aiService';
+import { authService } from '../services/authService';
 
 const COUNTRIES = [
     { name: 'India', code: '+91', flag: '🇮🇳' },

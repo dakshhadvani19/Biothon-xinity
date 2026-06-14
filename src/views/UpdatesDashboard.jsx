@@ -147,7 +147,7 @@ export default function UpdatesDashboard() {
       }
     };
     fetchInsights();
-  }, [data]);
+  }, [data, user]);
 
   const formatTime = (epoch) => {
     return new Date(epoch).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });

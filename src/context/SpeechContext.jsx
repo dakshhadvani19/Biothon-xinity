@@ -16,7 +16,15 @@ export function SpeechProvider({ children }) {
   // ElevenLabs configurations
   const [elevenLabsKey, setElevenLabsKey] = useState(() => localStorage.getItem('agrishield_elevenlabs_key') || '');
   const [isElevenLabsActive, setIsElevenLabsActive] = useState(() => localStorage.getItem('agrishield_elevenlabs_active') === 'true');
-  const [elevenLabsAgentId, setElevenLabsAgentId] = useState(() => localStorage.getItem('agrishield_elevenlabs_agent_id') || '');
+  const [elevenLabsAgentId, setElevenLabsAgentId] = useState(() => {
+    const stored = localStorage.getItem('agrishield_elevenlabs_agent_id') || localStorage.getItem('elevenlabs_agent_id');
+    if (stored === "b421a14c-1db2-4ffb-a25e-e47a9561de61") {
+      localStorage.removeItem('agrishield_elevenlabs_agent_id');
+      localStorage.removeItem('elevenlabs_agent_id');
+      return '';
+    }
+    return stored || '';
+  });
 
   const utteranceRef = useRef(null);
   const audioRef = useRef(null);
@@ -24,6 +32,7 @@ export function SpeechProvider({ children }) {
 
   const saveElevenLabsAgentId = (id) => {
     localStorage.setItem('agrishield_elevenlabs_agent_id', id);
+    localStorage.setItem('elevenlabs_agent_id', id);
     setElevenLabsAgentId(id);
   };
 

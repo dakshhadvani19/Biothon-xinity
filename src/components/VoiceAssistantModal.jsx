@@ -1,23 +1,23 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mic, X, Settings, Volume2, ShieldCheck, HelpCircle } from 'lucide-react';
+import { useSpeech } from '../context/SpeechContext';
 
 const VoiceAssistantModal = ({ isOpen, onClose }) => {
-  const [agentId, setAgentId] = useState(() => {
-    const stored = localStorage.getItem('elevenlabs_agent_id');
-    if (stored === "b421a14c-1db2-4ffb-a25e-e47a9561de61") {
-      return "agent_4001kv013qt6eh4a7ywnd2sv6yzd";
-    }
-    return stored || import.meta.env.VITE_ELEVENLABS_AGENT_ID || "agent_4001kv013qt6eh4a7ywnd2sv6yzd";
-  });
+  const { elevenLabsAgentId, saveElevenLabsAgentId } = useSpeech();
+  const [agentId, setAgentId] = useState(elevenLabsAgentId || import.meta.env.VITE_ELEVENLABS_AGENT_ID || "agent_4001kv013qt6eh4a7ywnd2sv6yzd");
   const [saved, setSaved] = useState(false);
+
+  useEffect(() => {
+    if (elevenLabsAgentId) {
+      setAgentId(elevenLabsAgentId);
+    }
+  }, [elevenLabsAgentId]);
 
   const handleSave = (e) => {
     e.preventDefault();
-    localStorage.setItem('elevenlabs_agent_id', agentId);
+    saveElevenLabsAgentId(agentId);
     setSaved(true);
-    // Dispatch custom event to notify ElevenLabsAssistant component
-    window.dispatchEvent(new Event('elevenlabs_agent_id_updated'));
     setTimeout(() => setSaved(false), 2000);
   };
 

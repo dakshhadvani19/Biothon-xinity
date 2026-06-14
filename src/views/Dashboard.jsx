@@ -359,7 +359,7 @@ export default function Dashboard() {
                     <div key={item.key} className="flex gap-3 items-start">
                       <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-xs font-bold text-green-500 shrink-0">{idx + 1}</div>
                       <div>
-                        <span className="text-[10px] font-bold text-green-500 uppercase">{item.crop} · </span>
+                        <span className="text-[10px] font-bold text-green-500 ">{item.crop} · </span>
                         <span className="text-sm text-gray-300">{item.text}</span>
                       </div>
                     </div>

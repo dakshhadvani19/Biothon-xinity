@@ -45,16 +45,6 @@ export default function TryNewCrop() {
     'Other (Specify)'
   ];
 
-  // Load weather and location context on mount
-  useEffect(() => {
-    syncLocationAndWeather();
-  }, []);
-
-  // Scroll inline chat to bottom
-  useEffect(() => {
-    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [chatMessages]);
-
   const syncLocationAndWeather = async () => {
     setIsSyncingLocation(true);
     try {
@@ -69,6 +59,16 @@ export default function TryNewCrop() {
       setIsSyncingLocation(false);
     }
   };
+
+  // Load weather and location context on mount
+  useEffect(() => {
+    syncLocationAndWeather();
+  }, []);
+
+  // Scroll inline chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
 
   const handleAnalyze = async (e) => {
     e.preventDefault();

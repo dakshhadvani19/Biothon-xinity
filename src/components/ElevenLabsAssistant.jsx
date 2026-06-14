@@ -1,15 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
+import { useSpeech } from '../context/SpeechContext';
 
 const ElevenLabsAssistant = () => {
-  const [agentId, setAgentId] = useState(() => {
-    const stored = localStorage.getItem('elevenlabs_agent_id');
-    // Clear old placeholder/invalid IDs to prevent them from overriding the correct default
-    if (stored === "b421a14c-1db2-4ffb-a25e-e47a9561de61") {
-      localStorage.removeItem('elevenlabs_agent_id');
-      return "agent_4001kv013qt6eh4a7ywnd2sv6yzd";
-    }
-    return stored || import.meta.env.VITE_ELEVENLABS_AGENT_ID || "agent_4001kv013qt6eh4a7ywnd2sv6yzd";
-  });
+  const { elevenLabsAgentId } = useSpeech();
+  const agentId = elevenLabsAgentId || import.meta.env.VITE_ELEVENLABS_AGENT_ID || "agent_4001kv013qt6eh4a7ywnd2sv6yzd";
 
   useEffect(() => {
     // Load ElevenLabs Conversational AI Widget Script
@@ -20,19 +14,6 @@ const ElevenLabsAssistant = () => {
       script.type = 'text/javascript';
       document.body.appendChild(script);
     }
-
-    // Listener to update agent id if changed in the modal
-    const handleStorageChange = () => {
-      const storedId = localStorage.getItem('elevenlabs_agent_id');
-      if (storedId) {
-        setAgentId(storedId);
-      }
-    };
-
-    window.addEventListener('elevenlabs_agent_id_updated', handleStorageChange);
-    return () => {
-      window.removeEventListener('elevenlabs_agent_id_updated', handleStorageChange);
-    };
   }, []);
 
   if (!agentId) return null;
