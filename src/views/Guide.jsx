@@ -232,11 +232,14 @@ export default function Guide() {
   const [fetchingFarms, setFetchingFarms] = useState(false);
   const [error, setError]           = useState(null);
 
+  const [sourceView, setSourceView] = useState('gallery');
+
   const apiBase = (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
 
   // Load gallery + diagnostic logs simultaneously
   const openGallery = async () => {
     setView('gallery');
+    setSourceView('gallery');
     setFetchingImages(true);
     setError(null);
     try {
@@ -258,6 +261,7 @@ export default function Guide() {
 
   const openFarmGallery = async () => {
     setView('farm_gallery');
+    setSourceView('farm_gallery');
     setFetchingFarms(true);
     const f = await farmService.getUserFarms(user.$id);
     setFarms(f);
@@ -290,6 +294,7 @@ export default function Guide() {
     const chosen = images.filter(i => selected.has(i.$id));
     if (!chosen.length) return;
     setView('loading');
+    setSourceView('gallery');
     setError(null);
     try {
       const diagnoses = chosen.map(img => {
@@ -321,6 +326,7 @@ export default function Guide() {
     const chosen = farms.filter(f => selectedFarms.has(f.$id));
     if (!chosen.length) return;
     setView('loading');
+    setSourceView('farm_gallery');
     setError(null);
     try {
       const payload = chosen.map(f => ({
@@ -757,7 +763,7 @@ export default function Guide() {
             <p className="text-gray-500 text-sm mt-0.5">{results.length} personalised plan{results.length !== 1 ? 's' : ''} generated</p>
           </div>
           <button
-            onClick={() => { setView('gallery'); setResults([]); setSelected(new Set()); }}
+            onClick={() => { setView(sourceView); setResults([]); setSelected(new Set()); setSelectedFarms(new Set()); }}
             className="flex items-center gap-2 text-sm bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold px-4 py-2 rounded-xl transition-colors"
           >
             <RotateCcw className="w-4 h-4" /> Analyse More
