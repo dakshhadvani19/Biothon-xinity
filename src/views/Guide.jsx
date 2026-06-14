@@ -246,6 +246,7 @@ export default function Guide() {
       const [imgs, logs] = await Promise.all([
         imageService.getUserImages(user.$id),
         diagnosticService.getUserDiagnosticLogs(user.$id),
+        new Promise(resolve => setTimeout(resolve, 4000)) // Artificial delay for better UX
       ]);
       setImages(imgs);
       setDiagLogs(logs);
@@ -263,7 +264,13 @@ export default function Guide() {
     setView('farm_gallery');
     setSourceView('farm_gallery');
     setFetchingFarms(true);
-    const f = await farmService.getUserFarms(user.$id);
+    
+    // Artificial delay for better UX
+    const [f] = await Promise.all([
+      farmService.getUserFarms(user.$id),
+      new Promise(resolve => setTimeout(resolve, 4000))
+    ]);
+    
     setFarms(f);
     setFetchingFarms(false);
   };
