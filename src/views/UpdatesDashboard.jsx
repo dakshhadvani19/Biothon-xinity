@@ -318,7 +318,7 @@ export default function UpdatesDashboard() {
                 </div>
                 {insightsHi[idx] && (
                   <button
-                    onClick={() => speak(insightsHi[idx], `सलाह ${idx + 1}`)}
+                    onClick={() => speak(insightsHi[idx], 'hi', `सलाह ${idx + 1}`)}
                     className="ml-10 self-start flex items-center gap-1.5 text-xs font-bold text-green-500 hover:text-green-400 bg-[#1A251A] px-2.5 py-1 rounded-lg transition-all active:scale-95 border border-[#1C2A1C] mt-1"
                     title="हिंदी में सुनें"
                   >
