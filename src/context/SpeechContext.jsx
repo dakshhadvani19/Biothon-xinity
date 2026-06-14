@@ -66,8 +66,10 @@ export function SpeechProvider({ children }) {
   };
 
   const stopSpeech = useCallback(() => {
-    // Stop native speech
-    window.speechSynthesis.cancel();
+    // Stop native speech only if it's actually doing something to avoid Chromium cancel() stall bug
+    if (window.speechSynthesis.speaking || window.speechSynthesis.pending) {
+      window.speechSynthesis.cancel();
+    }
     utteranceRef.current = null;
 
     // Stop ElevenLabs audio
@@ -84,7 +86,7 @@ export function SpeechProvider({ children }) {
   }, []);
 
   const fallbackToSpeechSynthesis = useCallback((text, lang) => {
-    window.speechSynthesis.cancel();
+    // We do NOT call cancel() here anymore since stopSpeech() handles it safely
 
     // Convert Arabic digits to Hindi words for correct pronunciation if Hindi
     const spokenText = lang === 'hi' ? replaceNumbersWithHindi(text) : text;
@@ -118,7 +120,12 @@ export function SpeechProvider({ children }) {
       };
 
       utteranceRef.current = utterance;
-      window.speechSynthesis.speak(utterance);
+      
+      // Chromium Bug Bypass: If cancel() was called recently, speak() will stall for 1.5s
+      // Deferring the speak call by a microscopic 50ms completely bypasses this artificial block!
+      setTimeout(() => {
+        window.speechSynthesis.speak(utterance);
+      }, 50);
     };
 
     const voices = window.speechSynthesis.getVoices();
