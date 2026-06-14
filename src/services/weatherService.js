@@ -1,4 +1,4 @@
-﻿export const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
+export const WEATHER_API_KEY = import.meta.env.VITE_WEATHER_API_KEY;
 
 // 1. Geospatial Math (Haversine Formula)
 export const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -221,10 +221,10 @@ export async function fetchAIInsights(weatherData, userFarms = []) {
         if (sessionCachedInsights) { return sessionCachedInsights; }
         const ML_ENGINE = (import.meta.env.VITE_ML_ENGINE_URL || 'https://dakshhadvani19-agrishield.hf.space');
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 4500);
-        const response = await fetch(${ML_ENGINE}/api/v1/agronomic-insights, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: weatherData, farms: userFarms }), signal: controller.signal });
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
+        const response = await fetch(`${ML_ENGINE}/api/v1/agronomic-insights`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ data: weatherData, farms: userFarms }), signal: controller.signal });
         clearTimeout(timeoutId);
-        if (!response.ok) { throw new Error(HTTP error! status: ); }
+        if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
         const payload = await response.json();
         let finalInsights;
         if (payload && (payload.insights_en || payload.insights_hi)) { finalInsights = { insights_en: payload.insights_en || [], insights_hi: payload.insights_hi || [] }; } else if (payload && Array.isArray(payload.insights)) { finalInsights = { insights_en: payload.insights, insights_hi: [] }; } else { throw new Error("Invalid format"); }

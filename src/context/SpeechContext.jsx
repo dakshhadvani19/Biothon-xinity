@@ -97,8 +97,10 @@ export function SpeechProvider({ children }) {
 
     const assignVoiceAndSpeak = () => {
       const voices = window.speechSynthesis.getVoices();
-      const matchedVoice = voices.find(v => v.lang === langCode) || 
-                          voices.find(v => v.lang.startsWith(lang));
+      // FAANG optimization: Prioritize 'localService: true' voices to avoid 1.5s cloud-TTS network latency on Chrome/Android
+      const matchedVoice = voices.find(v => v.lang === langCode && v.localService) || 
+                           voices.find(v => v.lang === langCode) || 
+                           voices.find(v => v.lang.startsWith(lang));
       if (matchedVoice) utterance.voice = matchedVoice;
 
       utterance.onstart = () => {
