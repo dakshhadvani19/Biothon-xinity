@@ -85,7 +85,7 @@ export default function SpeechPlayer() {
             <GripHorizontal className="w-4 h-4 text-gray-300 shrink-0" />
 
             {/* Animated waveform / volume icon / loader */}
-            <div className="flex items-center gap-0.5 shrink-0 justify-center w-5">
+            <div className="flex items-center gap-0.5 shrink-0 justify-center w-[60px]">
               {isVoiceLoading ? (
                 <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
               ) : isPlaying ? (
@@ -104,7 +104,7 @@ export default function SpeechPlayer() {
                   />
                 ))
               ) : (
-                <Volume2 className="w-4 h-4 text-green-500" />
+                <Volume2 className="w-5 h-5 text-green-500" />
               )}
             </div>
 
