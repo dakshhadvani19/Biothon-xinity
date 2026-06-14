@@ -8,6 +8,7 @@ export function SpeechProvider({ children }) {
   const [isVisible, setIsVisible] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
+  const [isVoiceLoading, setIsVoiceLoading] = useState(false);
   const [currentText, setCurrentText] = useState('');
   const [currentLabel, setCurrentLabel] = useState('');
   const [isHindiAvailable, setIsHindiAvailable] = useState(false);
@@ -81,6 +82,7 @@ export function SpeechProvider({ children }) {
     setIsPlaying(false);
     setIsPaused(false);
     setIsVisible(false);
+    setIsVoiceLoading(false);
     setCurrentText('');
     setCurrentLabel('');
   }, []);
@@ -106,15 +108,18 @@ export function SpeechProvider({ children }) {
       if (matchedVoice) utterance.voice = matchedVoice;
 
       utterance.onstart = () => {
+        setIsVoiceLoading(false);
         setIsPlaying(true);
         setIsPaused(false);
       };
       utterance.onend = () => {
+        setIsVoiceLoading(false);
         setIsPlaying(false);
         setIsPaused(false);
         setIsVisible(false);
       };
       utterance.onerror = () => {
+        setIsVoiceLoading(false);
         setIsPlaying(false);
         setIsPaused(false);
       };
@@ -157,7 +162,8 @@ export function SpeechProvider({ children }) {
     setCurrentText(text);
     setCurrentLabel(label);
     setIsVisible(true);
-    setIsPlaying(true);
+    setIsVoiceLoading(true);
+    setIsPlaying(false);
     setIsPaused(false);
 
     const activeKey = localStorage.getItem('agrishield_elevenlabs_key') || '';
@@ -188,10 +194,12 @@ export function SpeechProvider({ children }) {
         audioRef.current = audio;
 
         audio.onplay = () => {
+          setIsVoiceLoading(false);
           setIsPlaying(true);
           setIsPaused(false);
         };
         audio.onended = () => {
+          setIsVoiceLoading(false);
           setIsPlaying(false);
           setIsPaused(false);
           setIsVisible(false);
@@ -199,12 +207,14 @@ export function SpeechProvider({ children }) {
         };
         audio.onerror = () => {
           console.warn("ElevenLabs audio playback failed, falling back to local TTS");
+          setIsVoiceLoading(false);
           fallbackToSpeechSynthesis(cleanedText, lang);
         };
 
         await audio.play();
       } catch (err) {
         console.warn("ElevenLabs TTS failed, playing local fallback", err);
+        setIsVoiceLoading(false);
         fallbackToSpeechSynthesis(cleanedText, lang);
       }
     } else {
@@ -247,6 +257,7 @@ export function SpeechProvider({ children }) {
       isVisible,
       isPlaying,
       isPaused,
+      isVoiceLoading,
       currentText,
       currentLabel,
       isHindiAvailable,

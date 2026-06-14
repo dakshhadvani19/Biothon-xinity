@@ -4,7 +4,7 @@ import { X, Pause, Play, Square, Volume2, GripHorizontal } from 'lucide-react';
 import { useSpeech } from '../context/SpeechContext';
 
 export default function SpeechPlayer() {
-  const { isVisible, isPlaying, isPaused, stopSpeech, pauseSpeech, resumeSpeech, currentLabel } = useSpeech();
+  const { isVisible, isPlaying, isPaused, stopSpeech, pauseSpeech, resumeSpeech, currentLabel, isVoiceLoading } = useSpeech();
 
   // Draggable state
   const [pos, setPos] = useState({ x: 0, y: 0 }); // offset from center-top anchor
@@ -84,9 +84,11 @@ export default function SpeechPlayer() {
             {/* Drag handle */}
             <GripHorizontal className="w-4 h-4 text-gray-300 shrink-0" />
 
-            {/* Animated waveform / volume icon */}
-            <div className="flex items-center gap-0.5 shrink-0">
-              {isPlaying ? (
+            {/* Animated waveform / volume icon / loader */}
+            <div className="flex items-center gap-0.5 shrink-0 justify-center w-5">
+              {isVoiceLoading ? (
+                <div className="w-4 h-4 border-2 border-green-500 border-t-transparent rounded-full animate-spin"></div>
+              ) : isPlaying ? (
                 bars.map((h, i) => (
                   <motion.div
                     key={i}
