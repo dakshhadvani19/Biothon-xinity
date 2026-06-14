@@ -13,7 +13,7 @@ export const calculateDistance = (lat1, lon1, lat2, lon2) => {
     return R * c;
 };
 
-export const getFarmerCoordinates = () => {
+export const getFarmerCoordinates = (forceFresh = false) => {
     return new Promise((resolve) => {
         if (!navigator.geolocation) {
             console.warn("Geolocation is not supported by this browser. Using default coordinates.");
@@ -21,18 +21,58 @@ export const getFarmerCoordinates = () => {
             return;
         }
 
+        // FAANG technique: Optimistic local cache return for instant UI loading
+        if (!forceFresh) {
+            const cachedLocStr = localStorage.getItem('agrishield_last_location');
+            if (cachedLocStr) {
+                try {
+                    const cachedLoc = JSON.parse(cachedLocStr);
+                    // Consider cache fresh if less than 1 hour old
+                    const isFresh = (Date.now() - cachedLoc.timestamp) < 60 * 60 * 1000;
+                    if (isFresh && cachedLoc.lat && cachedLoc.lon) {
+                        resolve({ lat: cachedLoc.lat, lon: cachedLoc.lon });
+                        return; // Early return for 0ms latency
+                    }
+                } catch (e) {
+                    console.error("Cache parse error", e);
+                }
+            }
+        }
+
+        // Fast low-accuracy IP/WiFi-based location request
         navigator.geolocation.getCurrentPosition(
             (position) => {
-                resolve({
+                const coords = {
                     lat: position.coords.latitude,
                     lon: position.coords.longitude
-                });
+                };
+                // Preemptively cache to localStorage for future instant loads
+                localStorage.setItem('agrishield_last_location', JSON.stringify({
+                    ...coords,
+                    timestamp: Date.now()
+                }));
+                resolve(coords);
             },
             (error) => {
-                console.warn("Location access denied or failed. Using default coordinates.", error);
+                console.warn("Location access denied or failed. Falling back.", error);
+                // Fallback to stale cache if available, otherwise default
+                const cachedLocStr = localStorage.getItem('agrishield_last_location');
+                if (cachedLocStr) {
+                    try {
+                        const cachedLoc = JSON.parse(cachedLocStr);
+                        if (cachedLoc.lat && cachedLoc.lon) {
+                            resolve({ lat: cachedLoc.lat, lon: cachedLoc.lon });
+                            return;
+                        }
+                    } catch (e) {}
+                }
                 resolve({ lat: 22.3039, lon: 70.8022 });
             },
-            { timeout: 10000 }
+            { 
+                enableHighAccuracy: false, // Don't wake up GPS hardware, use fast WiFi/IP positioning
+                maximumAge: 300000,        // Accept 5-minute-old browser-cached position
+                timeout: 5000              // Fail fast (5s) instead of waiting forever (10s)
+            }
         );
     });
 };
@@ -119,15 +159,15 @@ export const fetchLocalWeatherAndAlerts = async (lat, lon) => {
 };
 
 // 3. Caching & Geofencing Wrapper
-export const getSmartWeatherUpdates = async () => {
+export const getSmartWeatherUpdates = async (forceFresh = false) => {
     try {
-        const coords = await getFarmerCoordinates();
+        const coords = await getFarmerCoordinates(forceFresh);
         const currentTime = Date.now();
 
         const cachedLocStr = localStorage.getItem('agrishield_last_location');
         const cachedWeatherStr = localStorage.getItem('agrishield_last_weather');
 
-        if (cachedLocStr && cachedWeatherStr) {
+        if (!forceFresh && cachedLocStr && cachedWeatherStr) {
             const cachedLoc = JSON.parse(cachedLocStr);
             const cachedWeather = JSON.parse(cachedWeatherStr);
 

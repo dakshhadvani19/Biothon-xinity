@@ -45,13 +45,13 @@ export default function TryNewCrop() {
     'Other (Specify)'
   ];
 
-  const syncLocationAndWeather = async () => {
+  const syncLocationAndWeather = async (forceFresh = false) => {
     setIsSyncingLocation(true);
     try {
-      const position = await getFarmerCoordinates();
+      const position = await getFarmerCoordinates(forceFresh);
       setCoords(position);
 
-      const weather = await getSmartWeatherUpdates();
+      const weather = await getSmartWeatherUpdates(forceFresh);
       setWeatherData(weather);
     } catch (err) {
       console.error("Location/Weather syncing failed:", err);
@@ -62,7 +62,7 @@ export default function TryNewCrop() {
 
   // Load weather and location context on mount
   useEffect(() => {
-    syncLocationAndWeather();
+    syncLocationAndWeather(false); // fast load
   }, []);
 
   // Scroll inline chat to bottom
@@ -202,7 +202,7 @@ export default function TryNewCrop() {
                 <span className="text-amber-400 font-medium">Rajkot, India (Default)</span>
               )}
               <button
-                onClick={syncLocationAndWeather}
+                onClick={() => syncLocationAndWeather(true)}
                 disabled={isSyncingLocation}
                 className="text-emerald-400/50 hover:text-emerald-300 transition-colors ml-1 p-1 hover:bg-emerald-800/50 rounded-lg"
                 title="Sync Location"

@@ -350,16 +350,16 @@ export default function Dashboard() {
           {!loading && cards.some(c => c.recommendations?.length > 0) && (
             <div>
               <h2 className="text-lg font-bold text-white mb-3">Field Recommendations</h2>
-              <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-5 space-y-4">
+              <div className="bg-[#0D150D] border border-[#1C2A1C] rounded-2xl p-3 space-y-2">
                 {cards
                   .filter(c => c.recommendations?.length > 0)
                   .flatMap(c => c.recommendations.map((r, i) => ({ crop: c.crop, text: r, key: `${c.id}-${i}` })))
                   .slice(0, 4)
                   .map((item, idx) => (
                     <div key={item.key} className="flex gap-3 items-start">
-                      <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-xs font-bold text-green-500 shrink-0">{idx + 1}</div>
+                      <div className="w-6 h-6 rounded-full bg-[#1A251A] border border-[#1C2A1C] flex items-center justify-center text-sm font-bold text-green-500 shrink-0">{idx + 1}</div>
                       <div>
-                        <span className="text-[16px] font-bold text-green-500 ">{item.crop} · </span>
+                        <span className="text-sm font-bold text-green-500 ">{item.crop} · </span>
                         <span className="text-sm text-gray-300">{item.text}</span>
                       </div>
                     </div>
